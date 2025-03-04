@@ -1,12 +1,12 @@
 import xdg from "xdg_portable";
 import * as path from "@std/path";
 import * as vb from "@valibot/valibot";
+import { existsSync } from "@std/fs";
+import { Format, FormatType } from "./format.ts";
+import type { Context } from "@lana-commerce/core/json/commerce";
 
 const configDir = path.join(xdg.config(), "lana-cli");
 const configFile = path.join(configDir, "config.json");
-
-const FormatType = vb.picklist(["table", "json"]);
-type Format = vb.InferOutput<typeof FormatType>;
 
 //------------------------------------------------------------------------------------------------
 
@@ -33,30 +33,37 @@ const jsonString = {
 const entries = {
   "jwt": configEntry({
     description:
-      "The JSON Web Token (JWT) for authenticating API calls. You usually won't need to set this manually — just use the `config login` command, and it'll handle everything for you.",
+      "Provides the JSON Web Token (JWT) for authenticating API calls. Manual configuration is typically unnecessary; instead, use the `config login` command to automatically manage this setting.",
     defaultValue: "",
     ...jsonString,
   }),
   "api_key": configEntry({
     description:
-      "Your API key for making API calls. This is the recommended way to authenticate with the CLI tool. If provided, it takes priority over the 'jwt' option.",
+      "Defines the API key required for authenticating API calls. This is the preferred authentication method when using the CLI tool. When provided, this value takes precedence over the 'jwt' option.",
     defaultValue: "",
     ...jsonString,
   }),
   "shop_id": configEntry({
     description:
-      "Many API calls need a shop ID. If you frequently work with the same shop, set this once, and it'll automatically apply to API requests — saving you time and effort!",
+      "Indicates the shop ID required for many API calls. If you consistently interact with a specific shop, configuring this value once will automatically apply it to relevant requests, streamlining your workflow.",
     defaultValue: "",
     ...jsonString,
   }),
   "api": configEntry({
     description:
-      "The domain used to determine API endpoints. It's primarily for internal access to test environments. Unless you have a specific need, the default value should work perfectly for you!",
+      "Specifies the domain used to define API endpoints. This setting is primarily intended for internal access to test environments. For most users, the default value is recommended and should suffice unless a specific requirement necessitates a change.",
     defaultValue: "lana.dev",
     ...jsonString,
   }),
+  "device_id": configEntry({
+    description:
+      "Identifies the device used for API calls. Setting this value allows the Lana CLI tool to be easily recognized during audits or tracking activities. No need to set it manually, it will be automatically generated when necessary.",
+    defaultValue: "",
+    ...jsonString,
+  }),
   "format": configEntry<Format>({
-    description: "Default format to use when formatting output.",
+    description:
+      "Determines the default output format for displaying results. The 'table' format is set by default for readability and ease of use.",
     defaultValue: "table",
     fromJSON: (v) => vb.parse(FormatType, v),
   }),
@@ -79,8 +86,12 @@ function ensureConfigLoaded() {
     const data = Deno.readTextFileSync(configFile);
     const json = JSON.parse(data);
     for (const key of entryKeys) {
-      const e = entries[key];
-      e.value = e.fromJSON(json[key]);
+      try {
+        const e = entries[key];
+        e.value = e.fromJSON(json[key]);
+      } catch {
+        // do nothing
+      }
     }
   } catch {
     // do nothing
@@ -91,10 +102,18 @@ function saveConfig() {
   const cfg: Record<string, any> = {};
   for (const key of entryKeys) {
     const e: ConfigEntry<any> = entries[key];
+    if (e.value === e.defaultValue) continue;
     cfg[key] = e.toJSON ? e.toJSON(e.value) : e.value;
   }
   Deno.mkdirSync(configDir, { recursive: true });
-  Deno.writeTextFileSync(configFile, JSON.stringify(cfg, null, 2));
+  Deno.writeTextFileSync(configFile, JSON.stringify(cfg, null, 2), { mode: 0o0600 });
+}
+
+export function getConfigInfo() {
+  return {
+    configFile,
+    configFileExists: existsSync(configFile),
+  };
 }
 
 export function getConfigEntries(): ConfigEntry<any>[] {
@@ -118,11 +137,36 @@ export function setConfigValue(name: string, value: string) {
     Deno.exitCode = 1;
     return;
   }
-
   saveConfig();
+}
+
+export function unsetConfigValue(name: string) {
+  ensureConfigLoaded();
+  const key = entryKeys.find((k) => k === name);
+  if (!key) {
+    console.error(`unknown config entry name: ${JSON.stringify(name)}`);
+    Deno.exitCode = 1;
+    return;
+  }
+  const e = entries[key];
+  setConfigValue(e.name, e.defaultValue);
 }
 
 export function getConfigValue<K extends keyof typeof entries>(name: K): (typeof entries)[K]["value"] {
   ensureConfigLoaded();
   return entries[name].value;
+}
+
+export function getRequestContext(): Context {
+  let deviceID = getConfigValue("device_id");
+  if (!deviceID) {
+    deviceID = crypto.randomUUID();
+    setConfigValue("device_id", deviceID);
+  }
+  const ctx: Context = {
+    deviceID,
+    host: `https://api.${getConfigValue("api")}`,
+    token: getConfigValue("api_key") || getConfigValue("jwt") || undefined,
+  };
+  return ctx;
 }

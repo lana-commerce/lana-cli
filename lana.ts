@@ -1,6 +1,7 @@
 #!/usr/bin/env -S deno run -A
 
 import { Command } from "@cliffy/command";
+import { addSubCommands } from "./generated/_subcommands.ts";
 
 interface FirstArgSubCommand {
   name: string;
@@ -13,22 +14,31 @@ interface SubCommand {
 }
 
 const subCommands: SubCommand[] = [
-  { name: "config", description: "Configure Lana CLI tool." },
-  { name: "files", description: "Manage files." },
-  { name: "customers", description: "Manage customers." },
-  { name: "products", description: "Manage products." },
-  { name: "orders", description: "Manage orders." },
+  { name: "login", description: "Login to Lana API. Shortcut for `config login`. (interactive)" },
+  { name: "config", description: "Configure Lana Commerce CLI tool." },
 ];
+addSubCommands(subCommands);
 
-async function getFirstArgumentCommand(args: string[]): Promise<FirstArgSubCommand | undefined> {
-  const firstArg = args.length > 0 ? args[0] : undefined;
-  if (firstArg && !firstArg.startsWith("-")) {
-    const cmd = (await import(`./commands/${firstArg}.ts`))?.default;
+async function tryLoadSubCommand(path: string, firstArg: string): Promise<FirstArgSubCommand | undefined> {
+  try {
+    const cmd = (await import(path))?.default;
     if (cmd instanceof Command) {
       const sc = subCommands.find((sc) => sc.name === firstArg);
       if (sc) cmd.description(sc.description);
       return { name: firstArg, command: cmd };
     }
+  } catch {
+    return undefined;
+  }
+}
+
+async function getFirstArgumentCommand(args: string[]): Promise<FirstArgSubCommand | undefined> {
+  const firstArg = args.length > 0 ? args[0] : undefined;
+  if (firstArg && !firstArg.startsWith("-")) {
+    return (
+      await tryLoadSubCommand(`./commands/${firstArg}.ts`, firstArg) ||
+      await tryLoadSubCommand(`./generated/${firstArg}.ts`, firstArg)
+    );
   }
   return undefined;
 }
@@ -38,7 +48,10 @@ const fac = await getFirstArgumentCommand(Deno.args);
 const mainCommand = new Command()
   .name("lana")
   .version("0.1")
-  .description("Manage Lana API resources.");
+  .description("Manage Lana Commerce API resources.")
+  .action(() => {
+    mainCommand.showHelp();
+  });
 
 for (const sc of subCommands) {
   if (fac && fac.name === sc.name) {
