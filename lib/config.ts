@@ -2,7 +2,6 @@ import xdg from "xdg_portable";
 import * as path from "@std/path";
 import * as vb from "@valibot/valibot";
 import { existsSync } from "@std/fs";
-import { Format, FormatType } from "./format.ts";
 import type { Context } from "@lana-commerce/core/json/commerce";
 
 const configDir = path.join(xdg.config(), "lana-cli");
@@ -60,12 +59,6 @@ const entries = {
       "Identifies the device used for API calls. Setting this value allows the Lana CLI tool to be easily recognized during audits or tracking activities. No need to set it manually, it will be automatically generated when necessary.",
     defaultValue: "",
     ...jsonString,
-  }),
-  "format": configEntry<Format>({
-    description:
-      "Determines the default output format for displaying results. The 'table' format is set by default for readability and ease of use.",
-    defaultValue: "table",
-    fromJSON: (v) => vb.parse(FormatType, v),
   }),
 };
 

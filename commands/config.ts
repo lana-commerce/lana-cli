@@ -1,23 +1,27 @@
-import { Command, EnumType } from "@cliffy/command";
-import { Table } from "@cliffy/table";
+import { Command } from "@cliffy/command";
 import { colors } from "@cliffy/ansi/colors";
-import {
-  getConfigEntries,
-  getConfigInfo,
-  getConfigValue,
-  getRequestContext,
-  setConfigValue,
-  unsetConfigValue,
-} from "../lib/config.ts";
+import { getConfigEntries, getConfigInfo, getRequestContext, setConfigValue, unsetConfigValue } from "../lib/config.ts";
 import fuzzySort from "fuzzysort";
 import { nonNull } from "../lib/nonNull.ts";
-import { FormatType } from "../lib/format.ts";
 import { promptSecret } from "@std/cli/prompt-secret";
-import { stringify as csvStringify } from "@std/csv";
 import { request } from "@lana-commerce/core/json/commerce";
 import { decodeBase64 } from "@std/encoding/base64";
+import { formatCSV, formatParser, FormatSpecInput, formatTable, printValues } from "../lib/format.ts";
+import { noop } from "../lib/noop.ts";
 
-const formatType = new EnumType(FormatType.options);
+const tableSpec: FormatSpecInput = {
+  name: (v) => [v.name, 50],
+  value: (v) => [(v.value !== v.defaultValue ? colors.bold : noop)(JSON.stringify(v.value)), 50],
+  description: (v) => [colors.gray(v.description), "100%"],
+  _vspacing: 1,
+};
+
+const csvSpec: FormatSpecInput = {
+  name: (v) => v.name,
+  value: (v) => v.value,
+  defaultValue: (v) => v.defaultValue,
+  description: (v) => v.description,
+};
 
 const cmd = new Command()
   .action(() => {
@@ -51,10 +55,11 @@ const cmd = new Command()
     unsetConfigValue(name);
   })
   .command("list [search]", "List all or some of the config values.")
-  .type("format", formatType)
-  .option("--format <format:format>", "Format the output in a specific way.")
+  .option("--format <format>", "Format the output in a specific way.", {
+    default: "table",
+    value: formatParser(tableSpec, csvSpec),
+  })
   .action(({ format }, search) => {
-    format = format ?? getConfigValue("format");
     const hlName = new Map<string, string>();
     const entries = getConfigEntries();
     const entriesMap = new Map(entries.map((e) => [e.name, e]));
@@ -74,53 +79,18 @@ const cmd = new Command()
       defaultValue: e.defaultValue,
       description: e.description,
     }));
-
-    if (format === "table") {
-      const header = ["NAME", "VALUE", "DESCRIPTION"];
-      const t = new Table<[string, string, string]>()
-        .header(header.map(colors.bold))
-        .padding(2)
-        .body(data.map((e) => {
-          const value = e.value;
-          const defaultValue = e.defaultValue;
-          const description = e.description;
-          let valueStr = JSON.stringify(value);
-          if (value !== defaultValue) {
-            valueStr = colors.bold(valueStr);
-          }
-          const name = hlName.get(e.name) || e.name;
-          return ["\n" + name, "\n" + valueStr, "\n" + colors.gray(description)];
-        }));
-      let maxK = 0;
-      let maxV = 0;
-
-      const w = Deno.consoleSize().columns - (header.length - 1) * 2; // available width
-      for (const row of t) {
-        const [k, v] = row;
-        maxK = Math.min(50, Math.max(maxK, k.length));
-        maxV = Math.min(50, Math.max(maxV, v.length));
-      }
-      t
-        .columns(
-          header.map((_, i) => i === header.length - 1 ? { maxWidth: Math.max(1, w - maxK - maxV) } : { maxWidth: 50 }),
-        )
-        .render();
-    } else if (format === "json") {
-      console.log(
-        JSON.stringify(
-          data,
-          null,
-          2,
-        ),
-      );
-    } else if (format === "csv") {
-      const output = csvStringify(data, { columns: ["name", "value", "defaultValue", "description"] });
-      Deno.stdout.writeSync(new TextEncoder().encode(output));
+    if (format.type === "table") {
+      // for table format we also produce some coloring on values
+      data.forEach((e) => {
+        e.name = hlName.get(e.name) || e.name;
+      });
     }
+    printValues(data, format);
   })
   .command("login", "Login to Lana API. (interactive)")
   .action(async () => {
-    const { token, ...ctx } = getRequestContext();
+    const ctx = getRequestContext();
+    delete ctx["token"];
     const email = prompt("Email:");
     const password = promptSecret("Password:");
     const resp = await request(ctx, "POST:auth/login.json").data({ email, password }).sendUnwrap();
