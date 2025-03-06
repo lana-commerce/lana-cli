@@ -203,16 +203,18 @@ export function formatCSV(values: any[], fmt: FormatCSV): string {
 
 export function printValues(values: any[], fmt: Format) {
   if (fmt.type === "json") {
-    console.log(
-      JSON.stringify(
-        values,
-        null,
-        2,
-      ),
-    );
+    console.log(JSON.stringify(values, null, 2));
   } else if (fmt.type === "csv") {
     Deno.stdout.writeSync(new TextEncoder().encode(formatCSV(values, fmt)));
   } else if (fmt.type === "table") {
     console.log(formatTable(values, fmt));
+  }
+}
+
+export function printValue(value: any, fmt: Format) {
+  if (fmt.type === "json") {
+    console.log(JSON.stringify(value, null, 2));
+  } else {
+    printValues([value], fmt);
   }
 }

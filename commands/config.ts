@@ -6,7 +6,7 @@ import { nonNull } from "../lib/nonNull.ts";
 import { promptSecret } from "@std/cli/prompt-secret";
 import { request } from "@lana-commerce/core/json/commerce";
 import { decodeBase64 } from "@std/encoding/base64";
-import { formatCSV, formatParser, FormatSpecInput, formatTable, printValues } from "../lib/format.ts";
+import { formatParser, FormatSpecInput, printValues } from "../lib/format.ts";
 import { noop } from "../lib/noop.ts";
 
 const tableSpec: FormatSpecInput = {
@@ -93,14 +93,31 @@ const cmd = new Command()
     delete ctx["token"];
     const email = prompt("Email:");
     const password = promptSecret("Password:");
-    const resp = await request(ctx, "POST:auth/login.json").data({ email, password }).sendUnwrap();
+    const resp = await request(ctx, "POST:auth/login.json")
+      .data({ email, password })
+      .extract({
+        token: (v) => v.token,
+        userID: (v) => v.user_id,
+      })
+      .sendUnwrap();
     const jwt = resp.token;
     const payload = jwt.split(".")[1];
     const json = JSON.parse(new TextDecoder().decode(decodeBase64(payload)));
-    console.log(`Login successful! JWT will be saved in the config file.`);
+    setConfigValue("jwt", jwt);
+    console.log(`Login successful! JWT is saved to the config file.`);
     console.log(`JWT read permission expires at: ${new Date(json.exp * 1000)}`);
     console.log(`JWT write permission expires at: ${new Date(json.wexp * 1000)}`);
-    setConfigValue("jwt", jwt);
+    const [r1, r2] = await Promise.all([
+      request(ctx, "GET:shops/page.json").sendUnwrap(),
+      request(ctx, "GET:users.json").ids([ctx.userID]).sendUnwrap(),
+    ]);
+    if (r2.length > 0 && r2[0].default_shop_id) {
+      console.log(`Shop ID is set to: ${r2[0].default_shop_id} (default user shop)`);
+      setConfigValue("shop_id", r2[0].default_shop_id);
+    } else if (r1.items.length === 1) {
+      console.log(`Shop ID is set to: ${r1.items[0].id} (the only shop)`);
+      setConfigValue("shop_id", r1.items[0].id);
+    }
   })
   .reset();
 
