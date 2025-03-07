@@ -6,6 +6,7 @@
     "jsr:@cliffy/flags@1.0.0-rc.7": "1.0.0-rc.7",
     "jsr:@cliffy/internal@1.0.0-rc.7": "1.0.0-rc.7",
     "jsr:@cliffy/table@1.0.0-rc.7": "1.0.0-rc.7",
+    "jsr:@std/bytes@^1.0.5": "1.0.5",
     "jsr:@std/cli@^1.0.13": "1.0.13",
     "jsr:@std/csv@^1.0.5": "1.0.5",
     "jsr:@std/encoding@^1.0.7": "1.0.7",
@@ -13,6 +14,7 @@
     "jsr:@std/fmt@^1.0.6": "1.0.6",
     "jsr:@std/fmt@~1.0.2": "1.0.6",
     "jsr:@std/fs@^1.0.13": "1.0.13",
+    "jsr:@std/io@~0.225.2": "0.225.2",
     "jsr:@std/path@^1.0.8": "1.0.8",
     "jsr:@std/streams@^1.0.8": "1.0.9",
     "jsr:@std/text@~1.0.7": "1.0.9",
@@ -54,6 +56,9 @@
         "jsr:@std/fmt@~1.0.2"
       ]
     },
+    "@std/bytes@1.0.5": {
+      "integrity": "4465dd739d7963d964c809202ebea6d5c6b8e3829ef25c6a224290fbb8a1021e"
+    },
     "@std/cli@1.0.13": {
       "integrity": "5db2d95ab2dca3bca9fb6ad3c19908c314e93d6391c8b026725e4892d4615a69"
     },
@@ -81,11 +86,20 @@
         "jsr:@std/path"
       ]
     },
+    "@std/io@0.225.2": {
+      "integrity": "3c740cd4ee4c082e6cfc86458f47e2ab7cb353dc6234d5e9b1f91a2de5f4d6c7",
+      "dependencies": [
+        "jsr:@std/bytes"
+      ]
+    },
     "@std/path@1.0.8": {
       "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
     },
     "@std/streams@1.0.9": {
-      "integrity": "a9d26b1988cdd7aa7b1f4b51e1c36c1557f3f252880fa6cc5b9f37078b1a5035"
+      "integrity": "a9d26b1988cdd7aa7b1f4b51e1c36c1557f3f252880fa6cc5b9f37078b1a5035",
+      "dependencies": [
+        "jsr:@std/bytes"
+      ]
     },
     "@std/text@1.0.9": {
       "integrity": "b2db4abc3e6ab93eb0280a0d5e126fd3fca80955bcc297ccaaf555e995eab747"
@@ -253,6 +267,7 @@
       "jsr:@std/encoding@^1.0.7",
       "jsr:@std/fmt@^1.0.6",
       "jsr:@std/fs@^1.0.13",
+      "jsr:@std/io@~0.225.2",
       "jsr:@std/path@^1.0.8",
       "jsr:@valibot/valibot@~0.42.1",
       "npm:@lana-commerce/core@14.0.0-alpha.8",
