@@ -21,8 +21,7 @@
     "jsr:@valibot/valibot@~0.42.1": "0.42.1",
     "npm:@lana-commerce/core@14.0.0-alpha.8": "14.0.0-alpha.8_preact@10.26.4_react@18.3.1_react-dom@18.3.1__react@18.3.1",
     "npm:@types/progress@2": "2.0.7",
-    "npm:fuzzysort@^3.1.0": "3.1.0",
-    "npm:progress@^2.0.3": "2.0.3"
+    "npm:fuzzysort@^3.1.0": "3.1.0"
   },
   "jsr": {
     "@cliffy/ansi@1.0.0-rc.7": {
@@ -207,9 +206,6 @@
     "preact@10.26.4": {
       "integrity": "sha512-KJhO7LBFTjP71d83trW+Ilnjbo+ySsaAgCfXOXUlmGzJ4ygYPWmysm77yg4emwfmoz3b22yvH5IsVFHbhUaH5w=="
     },
-    "progress@2.0.3": {
-      "integrity": "sha512-7PiHtLll5LdnKIMw100I+8xJXR5gW2QwWYkT6iJva0bXitZKa/XMrSbdmg3r2Xnaidz9Qumd0VPaMrZlF9V9sA=="
-    },
     "react-dom@18.3.1_react@18.3.1": {
       "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==",
       "dependencies": [
@@ -291,8 +287,7 @@
       "jsr:@std/path@^1.0.8",
       "jsr:@valibot/valibot@~0.42.1",
       "npm:@lana-commerce/core@14.0.0-alpha.8",
-      "npm:fuzzysort@^3.1.0",
-      "npm:progress@^2.0.3"
+      "npm:fuzzysort@^3.1.0"
     ]
   }
 }

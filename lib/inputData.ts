@@ -5,9 +5,9 @@ export function assembleInputData<T extends { data?: string }>(
   array: boolean,
   optsMap: Partial<Record<keyof T, string>>,
 ): any {
-  if (opts.data === "-") {
+  if (!optsMap["data"] && opts.data === "-") {
     return JSON.parse(new TextDecoder().decode(readAllSync(Deno.stdin)));
-  } else if (opts.data) {
+  } else if (!optsMap["data"] && opts.data) {
     return JSON.parse(Deno.readTextFileSync(opts.data));
   } else {
     const inputObj: any = {};
