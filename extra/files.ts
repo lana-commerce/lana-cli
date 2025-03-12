@@ -1,4 +1,5 @@
 import { Command } from "@cliffy/command";
+import { request } from "@lana-commerce/core/json/commerce";
 import { uploadFileGeneric } from "@lana-commerce/core/genericFile";
 import { CommerceFileUploadAPI } from "@lana-commerce/core/json/commerceFileUpload";
 import { getConfigValue, getRequestContext } from "../lib/config.ts";
@@ -37,6 +38,45 @@ export function addExtraCommands(cmd: Command): Command {
           },
         });
         await pb.end();
+      }
+    })
+    .command("download <file-id> [output]", "Download a file and save it.")
+    .option("--shop-id <string>", "Unique shop identifier.")
+    .action(async (opts, fileID, output) => {
+      const ctx = getRequestContext();
+      const r1 = await request(ctx, "GET:files.json")
+        .shop_id(opts.shopId || getConfigValue("shop_id"))
+        .ids([fileID])
+        .sendUnwrap();
+      const apiFile = r1[0];
+
+      let writable: WritableStream<Uint8Array>;
+      let finalize = () => {};
+      if (!output || output === "-") {
+        writable = Deno.stdout.writable;
+      } else {
+        const file = await Deno.create(output);
+        writable = file.writable;
+        finalize = () => {
+          file.close();
+        };
+      }
+
+      try {
+        let url = apiFile.public_url;
+        if (!url) {
+          const r2 = await request(ctx, "GET:files/download.json")
+            .shop_id(opts.shopId || getConfigValue("shop_id"))
+            .ids([fileID])
+            .sendUnwrap();
+          url = r2[0].url;
+        }
+        const resp = await fetch(url);
+        if (resp.body) {
+          await resp.body.pipeTo(writable, { preventClose: true });
+        }
+      } finally {
+        finalize();
       }
     })
     .reset();

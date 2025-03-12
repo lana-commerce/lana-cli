@@ -5,6 +5,7 @@ import { stripAnsiCode } from "@std/fmt/colors";
 import { unicodeWidth } from "@std/cli/unicode-width";
 import * as vb from "@valibot/valibot";
 import { stringify as csvStringify } from "@std/csv";
+import { iterAllItems, PageFetcher } from "@lana-commerce/core/json/fetchAllItems";
 
 function parseOrDefault<T extends vb.GenericSchema, U>(s: T, value: any, def: U): vb.InferOutput<T> | U {
   const result = vb.safeParse(s, value);
@@ -202,6 +203,7 @@ export function formatCSV(values: any[], fmt: FormatCSV): string {
 }
 
 export function printValues(values: any[], fmt: Format) {
+  if (values.length === 0) return;
   if (fmt.type === "json") {
     console.log(JSON.stringify(values, null, 2));
   } else if (fmt.type === "csv") {
@@ -216,5 +218,31 @@ export function printValue(value: any, fmt: Format) {
     console.log(JSON.stringify(value, null, 2));
   } else {
     printValues([value], fmt);
+  }
+}
+
+export async function streamValues<T>(fetcher: PageFetcher<T>, fmt: Format, sortBy: string | undefined) {
+  if (!sortBy) {
+    throw new Error(`Streaming feature requires "--sort-by" option to be set.`);
+  }
+  if (fmt.type === "table") {
+    throw new Error(`Cannot stream using "table" format. Please, use "json" or "csv" format.`);
+  }
+  if (fmt.type === "csv") {
+    const te = new TextEncoder();
+    const spec = fmt.spec;
+    const cols = Object.keys(spec);
+    const header = fmt.header ?? true;
+    if (header) {
+      Deno.stdout.writeSync(te.encode(csvStringify([cols])));
+    }
+    for await (const item of iterAllItems(fetcher)) {
+      const data = cols.map((c) => spec[c](item));
+      Deno.stdout.writeSync(te.encode(csvStringify([data])));
+    }
+  } else if (fmt.type === "json") {
+    for await (const item of iterAllItems(fetcher)) {
+      console.log(JSON.stringify(item));
+    }
   }
 }

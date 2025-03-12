@@ -23,8 +23,6 @@ async function tryLoadSubCommand(path: string, firstArg: string): Promise<FirstA
   try {
     const cmd = (await import(path))?.default;
     if (cmd instanceof Command) {
-      const sc = subCommands.find((sc) => sc.name === firstArg);
-      if (sc) cmd.description(sc.description);
       return { name: firstArg, command: cmd };
     }
   } catch {
