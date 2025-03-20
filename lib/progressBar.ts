@@ -260,3 +260,27 @@ export class ProgressBar {
       .catch(() => {});
   }
 }
+
+export class ProgressBarStream extends TransformStream<Uint8Array, Uint8Array> {
+  constructor(
+    writable: WritableStream<Uint8Array>,
+    options: ProgressBarOptions,
+  ) {
+    let bar: ProgressBar | undefined;
+    super({
+      start(_controller) {
+        bar = new ProgressBar(writable, options);
+      },
+      transform(chunk, controller) {
+        bar?.add(chunk.length);
+        controller.enqueue(chunk);
+      },
+      flush(_controller) {
+        bar?.end();
+      },
+      cancel() {
+        bar?.end();
+      },
+    });
+  }
+}

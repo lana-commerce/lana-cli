@@ -10,9 +10,12 @@ import { formatParser, FormatSpecInput, printValues } from "../lib/format.ts";
 import { noop } from "../lib/noop.ts";
 
 const tableSpec: FormatSpecInput = {
-  name: (v) => [v.name, 50],
-  value: (v) => [(v.value !== v.defaultValue ? colors.bold : noop)(JSON.stringify(v.value)), 50],
-  description: (v) => [colors.gray(v.description), "100%"],
+  name: (v) => v.name,
+  value: (v) => (v.value !== v.defaultValue ? colors.bold : noop)(JSON.stringify(v.value)),
+  description: (v) => colors.gray(v.description),
+  _name: 50,
+  _value: 50,
+  _description: "100%",
   _vspacing: 1,
 };
 

@@ -29,12 +29,18 @@ export type FormatCSV = {
   header?: boolean;
 };
 
+export type FormatColumn = {
+  width?: number;
+  percentWidth?: number;
+};
+
 export type FormatTable = {
   type: "table";
   spec: FormatSpec;
   hspacing?: number;
   vspacing?: number;
   header?: boolean;
+  cols: Record<string, FormatColumn>;
 };
 
 export type Format = FormatJSON | FormatCSV | FormatTable;
@@ -45,10 +51,25 @@ export function formatParser(tableSpec: FormatSpecInput, csvSpec?: FormatSpecInp
   };
 }
 
+function parseColSpec(w: any): FormatColumn {
+  if (typeof w === "number" && w > 0) {
+    return { width: Math.floor(w) };
+  } else if (typeof w === "string") {
+    if (w.endsWith("%")) {
+      const pw = Number(w.substring(0, w.length - 1));
+      if (!isNaN(pw) && pw > 0) {
+        return { percentWidth: pw };
+      }
+    }
+  }
+  return {};
+}
+
 function parseInputSpec(s: FormatSpecInput): FormatTable {
   const out: FormatTable = {
     type: "table",
     spec: {},
+    cols: {},
   };
   for (const key in s) {
     const val = s[key];
@@ -60,6 +81,9 @@ function parseInputSpec(s: FormatSpecInput): FormatTable {
       out.vspacing = parseOrDefault(vb.number(), val, undefined);
     } else if (key === "_header") {
       out.header = parseOrDefault(vb.boolean(), val, undefined);
+    } else if (key.startsWith("_")) {
+      const col = key.substring(1);
+      out.cols[col] = parseColSpec(val);
     }
   }
   return out;
@@ -98,24 +122,17 @@ export function parseFormat(
   throw new ValidationError("Unsupported or malformed format.");
 }
 
-interface ColSpec {
-  w?: number;
-  pw?: number;
-  maxW: number;
-}
-
-function parseColSpec(w: any): Partial<ColSpec> {
-  if (typeof w === "number" && w > 0) {
-    return { w: Math.floor(w) };
-  } else if (typeof w === "string") {
-    if (w.endsWith("%")) {
-      const pw = Number(w.substring(0, w.length - 1));
-      if (!isNaN(pw) && pw > 0) {
-        return { pw };
-      }
-    }
+function flattenAddRow(rows: string[][], row: (string | string[])[]) {
+  let maxN = 0;
+  for (const c of row) {
+    maxN = Math.max(maxN, Array.isArray(c) ? c.length : 1);
   }
-  return {};
+  for (let i = 0; i < maxN; i++) {
+    const nrow = row.map((c) => {
+      return Array.isArray(c) ? (i < c.length ? c[i] : "") : (i === 0 ? c : "");
+    });
+    rows.push(nrow);
+  }
 }
 
 export function formatTable(values: any[], fmt: FormatTable): string {
@@ -131,31 +148,46 @@ export function formatTable(values: any[], fmt: FormatTable): string {
   }
   t = t.padding(hspacing);
   const vs = "\n".repeat(vspacing);
-  const colSpecs: ColSpec[] = cols.map(() => ({ maxW: 0 }));
-  t = t.body(values.map((v, index) => {
-    return cols.map((c, ci) => {
+  const colSpecs: { w?: number; pw?: number; maxW: number }[] = cols.map(() => ({ maxW: 0 }));
+  cols.forEach((c, ci) => {
+    const cs = colSpecs[ci];
+    const v = fmt.cols[c];
+    if (v) {
+      cs.w = v.width;
+      cs.pw = v.percentWidth;
+    }
+  });
+  const rows: string[][] = [];
+  values.forEach((v) => {
+    const row: (string | string[])[] = [];
+    cols.forEach((c, ci) => {
       const cs = colSpecs[ci];
-      let val = "";
+      let val: string | string[] = "";
       try {
         const result = spec[c](v);
         if (Array.isArray(result)) {
-          const [r, mw] = result;
-          val = `${r}`;
-          if (index === 0) {
-            const ncs = parseColSpec(mw);
-            cs.pw = ncs.pw;
-            cs.w = ncs.w;
-          }
+          val = result.flat(Infinity).map((v) => `${v}`);
         } else {
           val = `${result}`;
         }
       } catch {
         // do nothing
       }
-      cs.maxW = Math.max(cs.maxW, unicodeWidth(stripAnsiCode(val)));
-      return vs + val;
+      if (Array.isArray(val)) {
+        const cells: string[] = [];
+        for (const v of val) {
+          cs.maxW = Math.max(cs.maxW, unicodeWidth(stripAnsiCode(v)));
+          cells.push(vs + v);
+        }
+        row.push(cells);
+      } else {
+        cs.maxW = Math.max(cs.maxW, unicodeWidth(stripAnsiCode(val)));
+        row.push(vs + val);
+      }
     });
-  }));
+    flattenAddRow(rows, row);
+  });
+  t = t.body(rows);
 
   let pwSum = 0;
   for (const cs of colSpecs) {
