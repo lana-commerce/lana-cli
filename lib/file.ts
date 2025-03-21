@@ -1,5 +1,8 @@
 import { Context, request } from "@lana-commerce/core/json/commerce";
-import { ProgressBarStream } from "./progressBar.ts";
+import { ProgressBar, ProgressBarStream } from "./progressBar.ts";
+import { basename } from "@std/path";
+import { CommerceFileUploadAPI } from "@lana-commerce/core/json/commerceFileUpload";
+import { uploadFileGeneric } from "@lana-commerce/core/genericFile";
 
 export async function downloadFileToFile(ctx: Context, shopID: string, fileID: string, outputPath: string) {
   const r1 = await request(ctx, "GET:files.json")
@@ -30,4 +33,33 @@ export async function downloadFileToFile(ctx: Context, shopID: string, fileID: s
   } finally {
     file.close();
   }
+}
+
+export async function uploadFileToFile(ctx: Context, shopID: string, inputPath: string) {
+  const fileData = Deno.readFileSync(inputPath);
+  const name = basename(inputPath);
+  const pb = new ProgressBar(Deno.stdout.writable, {
+    max: fileData.byteLength,
+    fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}Uploading ${name}`,
+  });
+  let lastUploadedBytes = 0;
+  const result = await uploadFileGeneric({
+    api: new CommerceFileUploadAPI(ctx),
+    contentType: "application/octet-stream",
+    data: fileData,
+    name,
+    shopID,
+    storage: "private",
+    size: fileData.byteLength,
+    onProgress: (report) => {
+      const toAdd = report.uploadedBytes - lastUploadedBytes;
+      lastUploadedBytes = report.uploadedBytes;
+      pb.add(toAdd);
+    },
+  });
+  await pb.end();
+  if (result.kind !== "ok") {
+    throw new Error("file upload failed");
+  }
+  return result.file.id;
 }

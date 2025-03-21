@@ -20,7 +20,7 @@ export function addExtraCommands(cmd: Command): Command {
         const ctx = getRequestContext();
         const pb = new ProgressBar(Deno.stdout.writable, {
           max: fileData.byteLength,
-          fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}${name}`,
+          fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}Uploading ${name}`,
         });
         let lastUploadedBytes = 0;
         await uploadFileGeneric({
