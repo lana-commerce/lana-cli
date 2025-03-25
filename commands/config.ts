@@ -6,25 +6,24 @@ import { nonNull } from "../lib/nonNull.ts";
 import { promptSecret } from "@std/cli/prompt-secret";
 import { request } from "@lana-commerce/core/json/commerce";
 import { decodeBase64 } from "@std/encoding/base64";
-import { formatParser, FormatSpecInput, printValues } from "../lib/format.ts";
-import { noop } from "../lib/noop.ts";
+import { formatParser, printValues } from "../lib/format.ts";
 
-const tableSpec: FormatSpecInput = {
-  name: (v) => v.name,
-  value: (v) => (v.value !== v.defaultValue ? colors.bold : noop)(JSON.stringify(v.value)),
-  description: (v) => colors.gray(v.description),
+const tableSpec = `{
+  name: v=>v.name,
+  value: v=>(v.value !== v.defaultValue ? colors.bold : noop)(JSON.stringify(v.value)),
+  description: v=>colors.gray(v.description),
   _name: 50,
   _value: 50,
   _description: "100%",
   _vspacing: 1,
-};
+}`;
 
-const csvSpec: FormatSpecInput = {
-  name: (v) => v.name,
-  value: (v) => v.value,
-  defaultValue: (v) => v.defaultValue,
-  description: (v) => v.description,
-};
+const csvSpec = `{
+  name: v=>v.name,
+  value: v=>v.value,
+  defaultValue: v=>v.defaultValue,
+  description: v=>v.description,
+}`;
 
 const cmd = new Command()
   .action(() => {

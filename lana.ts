@@ -26,6 +26,7 @@ async function tryLoadSubCommand(path: string, firstArg: string): Promise<FirstA
       return { name: firstArg, command: cmd };
     }
   } catch {
+    // console.error(err);
     return undefined;
   }
 }

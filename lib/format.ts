@@ -5,7 +5,9 @@ import { stripAnsiCode } from "@std/fmt/colors";
 import { unicodeWidth } from "@std/cli/unicode-width";
 import * as vb from "@valibot/valibot";
 import { stringify as csvStringify } from "@std/csv";
+import { format as formatBytes } from "@std/fmt/bytes";
 import { iterAllItems, PageFetcher } from "@lana-commerce/core/json/fetchAllItems";
+import { formatCurrency } from "./cache.ts";
 
 function parseOrDefault<T extends vb.GenericSchema, U>(s: T, value: any, def: U): vb.InferOutput<T> | U {
   const result = vb.safeParse(s, value);
@@ -45,7 +47,7 @@ export type FormatTable = {
 
 export type Format = FormatJSON | FormatCSV | FormatTable;
 
-export function formatParser(tableSpec: FormatSpecInput, csvSpec?: FormatSpecInput): (format: string) => Format {
+export function formatParser(tableSpec: string, csvSpec?: string): (format: string) => Format {
   return (format) => {
     return parseFormat(format, tableSpec, csvSpec || tableSpec);
   };
@@ -90,28 +92,35 @@ function parseInputSpec(s: FormatSpecInput): FormatTable {
 }
 
 function fancyEval(str: string): any {
-  return new Function(`with (this) { return (${str}); }`).call({ colors, noop: (v: any) => v });
+  return new Function(`with (this) { return (${str}); }`).call({
+    colors,
+    noop: (v: any) => v,
+    formatCurrency,
+    formatSize: (v: number) => formatBytes(Number(v)),
+  });
 }
 
 export function parseFormat(
   format: string,
-  defaultTableSpec: FormatSpecInput,
-  defaultCSVSpec: FormatSpecInput,
+  defaultTableSpec: string,
+  defaultCSVSpec: string,
 ): Format {
+  if (format === "table") {
+    format = `table:${defaultTableSpec}`;
+  }
+  if (format === "csv") {
+    format = `csv:${defaultCSVSpec}`;
+  }
+
   if (format === "json") {
     return { type: "json" };
-  } else if (format === "table") {
-    return parseInputSpec(defaultTableSpec);
-  } else if (format === "csv") {
-    const s = parseInputSpec(defaultCSVSpec);
-    return { type: "csv", spec: s.spec, header: s.header };
   } else if (format.startsWith("table")) {
     let str = format.substring("table".length + 1);
     if (str.endsWith(")")) {
       str = str.substring(0, str.length - 1);
     }
     return parseInputSpec(fancyEval(str));
-  } else if (format.startsWith("csv(")) {
+  } else if (format.startsWith("csv")) {
     let str = format.substring("csv".length + 1);
     if (str.endsWith(")")) {
       str = str.substring(0, str.length - 1);
