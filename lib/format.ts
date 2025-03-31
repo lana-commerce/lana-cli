@@ -237,7 +237,7 @@ export function formatCSV(values: any[], fmt: FormatCSV): string {
     data.push(cols);
   }
   for (const v of values) {
-    data.push(cols.map((c) => spec[c](v)));
+    flattenAddRow(data, cols.map((c) => spec[c](v)));
   }
 
   return csvStringify(data);
@@ -278,8 +278,9 @@ export async function streamValues<T>(fetcher: PageFetcher<T>, fmt: Format, sort
       Deno.stdout.writeSync(te.encode(csvStringify([cols])));
     }
     for await (const item of iterAllItems(fetcher)) {
-      const data = cols.map((c) => spec[c](item));
-      Deno.stdout.writeSync(te.encode(csvStringify([data])));
+      const data: string[][] = [];
+      flattenAddRow(data, cols.map((c) => spec[c](item)));
+      Deno.stdout.writeSync(te.encode(csvStringify(data)));
     }
   } else if (fmt.type === "json") {
     for await (const item of iterAllItems(fetcher)) {
