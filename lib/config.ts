@@ -2,6 +2,7 @@ import xdg from "xdg_portable";
 import * as path from "@std/path";
 import * as vb from "@valibot/valibot";
 import { existsSync } from "@std/fs";
+import { decodeBase64 } from "@std/encoding/base64";
 import type { Context } from "@lana-commerce/core/json/commerce";
 
 const configDir = path.join(xdg.config(), "lana-cli");
@@ -130,6 +131,22 @@ export function setConfigValue(name: string, value: string) {
     Deno.exitCode = 1;
     return;
   }
+
+  if (key === "api_key") {
+    try {
+      const vals = value.split(".");
+      const shopID = JSON.parse(new TextDecoder().decode(decodeBase64(vals[1]))).shop_id;
+      if (shopID && typeof shopID === "string") {
+        console.log(`JWT is unset`);
+        console.log(`Shop ID is set to: ${shopID}`);
+        entries.jwt.value = "";
+        entries.shop_id.value = shopID;
+      }
+    } catch {
+      // do nothing
+    }
+  }
+
   saveConfig();
 }
 

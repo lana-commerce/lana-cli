@@ -19,27 +19,35 @@ const subCommands: SubCommand[] = [
 ];
 addSubCommands(subCommands);
 
-async function tryLoadSubCommand(path: string, firstArg: string): Promise<FirstArgSubCommand | undefined> {
+async function tryLoadSubCommand(firstArg: string): Promise<FirstArgSubCommand | undefined> {
+  let result: FirstArgSubCommand | undefined;
+
   try {
-    const cmd = (await import(path))?.default;
+    const cmd = (await import(`./commands/${firstArg}.ts`))?.default;
     if (cmd instanceof Command) {
-      return { name: firstArg, command: cmd };
+      result = { name: firstArg, command: cmd };
     }
   } catch {
     // console.error(err);
-    return undefined;
   }
+  if (result) return result;
+  try {
+    const cmd = (await import(`./generated/${firstArg}.ts`))?.default;
+    if (cmd instanceof Command) {
+      result = { name: firstArg, command: cmd };
+    }
+  } catch {
+    // console.error(err);
+  }
+  return result;
 }
 
-async function getFirstArgumentCommand(args: string[]): Promise<FirstArgSubCommand | undefined> {
+function getFirstArgumentCommand(args: string[]): Promise<FirstArgSubCommand | undefined> {
   const firstArg = args.length > 0 ? args[0] : undefined;
   if (firstArg && !firstArg.startsWith("-")) {
-    return (
-      await tryLoadSubCommand(`./commands/${firstArg}.ts`, firstArg) ||
-      await tryLoadSubCommand(`./generated/${firstArg}.ts`, firstArg)
-    );
+    return tryLoadSubCommand(firstArg);
   }
-  return undefined;
+  return Promise.resolve(undefined);
 }
 
 const fac = await getFirstArgumentCommand(Deno.args);

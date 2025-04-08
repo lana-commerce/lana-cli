@@ -26,7 +26,7 @@ export function addExtraCommands(cmd: Command): Command {
         await uploadFileGeneric({
           api: new CommerceFileUploadAPI(ctx),
           contentType: opts.contentType ?? "application/octet-stream",
-          data: fileData,
+          data: fileData.buffer,
           name,
           shopID: opts.shopId || getConfigValue("shop_id"),
           storage: opts.public ? "general" : "private",

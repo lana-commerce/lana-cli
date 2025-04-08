@@ -46,7 +46,7 @@ export async function uploadFileToFile(ctx: Context, shopID: string, inputPath: 
   const result = await uploadFileGeneric({
     api: new CommerceFileUploadAPI(ctx),
     contentType: "application/octet-stream",
-    data: fileData,
+    data: fileData.buffer,
     name,
     shopID,
     storage: "private",
