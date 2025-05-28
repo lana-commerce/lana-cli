@@ -7,19 +7,21 @@
     "jsr:@cliffy/internal@1.0.0-rc.7": "1.0.0-rc.7",
     "jsr:@cliffy/table@1.0.0-rc.7": "1.0.0-rc.7",
     "jsr:@std/bytes@^1.0.5": "1.0.5",
-    "jsr:@std/cli@^1.0.13": "1.0.13",
-    "jsr:@std/csv@^1.0.5": "1.0.5",
+    "jsr:@std/cli@^1.0.17": "1.0.17",
+    "jsr:@std/csv@^1.0.6": "1.0.6",
+    "jsr:@std/encoding@^1.0.10": "1.0.10",
     "jsr:@std/encoding@^1.0.7": "1.0.7",
     "jsr:@std/encoding@~1.0.5": "1.0.7",
     "jsr:@std/fmt@^1.0.6": "1.0.6",
+    "jsr:@std/fmt@^1.0.8": "1.0.8",
     "jsr:@std/fmt@~1.0.2": "1.0.6",
-    "jsr:@std/fs@^1.0.13": "1.0.13",
+    "jsr:@std/fs@^1.0.17": "1.0.17",
     "jsr:@std/io@~0.225.2": "0.225.2",
-    "jsr:@std/path@^1.0.8": "1.0.8",
-    "jsr:@std/streams@^1.0.8": "1.0.9",
+    "jsr:@std/path@^1.0.9": "1.0.9",
+    "jsr:@std/streams@^1.0.9": "1.0.9",
     "jsr:@std/text@~1.0.7": "1.0.9",
-    "jsr:@valibot/valibot@~0.42.1": "0.42.1",
-    "npm:@lana-commerce/core@14.0.0-alpha.8": "14.0.0-alpha.8_preact@10.26.4_react@18.3.1_react-dom@18.3.1__react@18.3.1",
+    "jsr:@valibot/valibot@^1.1.0": "1.1.0",
+    "npm:@lana-commerce/core@14.0.0-alpha.13": "14.0.0-alpha.13_preact@10.26.7_react@18.3.1_react-dom@18.3.1__react@18.3.1",
     "npm:@types/progress@2": "2.0.7",
     "npm:fuzzysort@^3.1.0": "3.1.0"
   },
@@ -60,11 +62,11 @@
     "@std/bytes@1.0.5": {
       "integrity": "4465dd739d7963d964c809202ebea6d5c6b8e3829ef25c6a224290fbb8a1021e"
     },
-    "@std/cli@1.0.13": {
-      "integrity": "5db2d95ab2dca3bca9fb6ad3c19908c314e93d6391c8b026725e4892d4615a69"
+    "@std/cli@1.0.17": {
+      "integrity": "e15b9abe629e17be90cc6216327f03a29eae613365f1353837fa749aad29ce7b"
     },
-    "@std/csv@1.0.5": {
-      "integrity": "02006ffd77e84b2bf01968d4e792f0b5cba057c73dc6a89accb96d803493675f",
+    "@std/csv@1.0.6": {
+      "integrity": "52ef0e62799a0028d278fa04762f17f9bd263fad9a8e7f98c14fbd371d62d9fd",
       "dependencies": [
         "jsr:@std/streams"
       ]
@@ -75,14 +77,20 @@
     "@std/encoding@1.0.7": {
       "integrity": "f631247c1698fef289f2de9e2a33d571e46133b38d042905e3eac3715030a82d"
     },
+    "@std/encoding@1.0.10": {
+      "integrity": "8783c6384a2d13abd5e9e87a7ae0520a30e9f56aeeaa3bdf910a3eaaf5c811a1"
+    },
     "@std/fmt@1.0.5": {
       "integrity": "0cfab43364bc36650d83c425cd6d99910fc20c4576631149f0f987eddede1a4d"
     },
     "@std/fmt@1.0.6": {
       "integrity": "a2c56a69a2369876ddb3ad6a500bb6501b5bad47bb3ea16bfb0c18974d2661fc"
     },
-    "@std/fs@1.0.13": {
-      "integrity": "756d3ff0ade91c9e72b228e8012b6ff00c3d4a4ac9c642c4dac083536bf6c605",
+    "@std/fmt@1.0.8": {
+      "integrity": "71e1fc498787e4434d213647a6e43e794af4fd393ef8f52062246e06f7e372b7"
+    },
+    "@std/fs@1.0.17": {
+      "integrity": "1c00c632677c1158988ef7a004cb16137f870aafdb8163b9dce86ec652f3952b",
       "dependencies": [
         "jsr:@std/path"
       ]
@@ -93,25 +101,22 @@
         "jsr:@std/bytes"
       ]
     },
-    "@std/path@1.0.8": {
-      "integrity": "548fa456bb6a04d3c1a1e7477986b6cffbce95102d0bb447c67c4ee70e0364be"
+    "@std/path@1.0.9": {
+      "integrity": "260a49f11edd3db93dd38350bf9cd1b4d1366afa98e81b86167b4e3dd750129e"
     },
     "@std/streams@1.0.9": {
-      "integrity": "a9d26b1988cdd7aa7b1f4b51e1c36c1557f3f252880fa6cc5b9f37078b1a5035",
-      "dependencies": [
-        "jsr:@std/bytes"
-      ]
+      "integrity": "a9d26b1988cdd7aa7b1f4b51e1c36c1557f3f252880fa6cc5b9f37078b1a5035"
     },
     "@std/text@1.0.9": {
       "integrity": "b2db4abc3e6ab93eb0280a0d5e126fd3fca80955bcc297ccaaf555e995eab747"
     },
-    "@valibot/valibot@0.42.1": {
-      "integrity": "ba0f6f7964aaeec0e4b1f793d575061f325ae6254cbb9d7ff01fb65068a0a23b"
+    "@valibot/valibot@1.1.0": {
+      "integrity": "2617f02b532011b8140926899d420a3e1bbb0fcb7cdf8e7b669df89e7edd7f5f"
     }
   },
   "npm": {
-    "@lana-commerce/core@14.0.0-alpha.8_preact@10.26.4_react@18.3.1_react-dom@18.3.1__react@18.3.1": {
-      "integrity": "sha512-EauJEVXwYPEd5r0qIQmWRzauGd53fafV19za8J9MkbUeHmOFiAmZEd1Vh/YpkhAa63bkyVqYG2eKYuIPmFq5wA==",
+    "@lana-commerce/core@14.0.0-alpha.13_preact@10.26.7_react@18.3.1_react-dom@18.3.1__react@18.3.1": {
+      "integrity": "sha512-hjdkXfA299q/cayo6lyriKJFG0T9REuY6Wfrii3zDxe3y3/fXyH8IPBiqgxB+foJUmNFw0rG+/CE4n0kZJip6w==",
       "dependencies": [
         "@simplewebauthn/browser",
         "component-url",
@@ -203,8 +208,8 @@
     "postmate@1.5.2": {
       "integrity": "sha512-EHLlEmrUA/hALls49oBrtE7BzDXXjB9EiO4MZpsoO3R/jRuBmD+2WKQuYAbeuVEpTzrPpUTT79z2cz4qaFgPRg=="
     },
-    "preact@10.26.4": {
-      "integrity": "sha512-KJhO7LBFTjP71d83trW+Ilnjbo+ySsaAgCfXOXUlmGzJ4ygYPWmysm77yg4emwfmoz3b22yvH5IsVFHbhUaH5w=="
+    "preact@10.26.7": {
+      "integrity": "sha512-43xS+QYc1X1IPbw03faSgY6I6OYWcLrJRv3hU0+qMOfh/XCHcP0MX2CVjNARYR2cC/guu975sta4OcjlczxD7g=="
     },
     "react-dom@18.3.1_react@18.3.1": {
       "integrity": "sha512-5m4nQKp+rZRb09LNH59GM4BxTh9251/ylbKIbpe7TpGxfJ+9kv6BLkLBXIjjspbgbnIBNqlI23tRnTWT0snUIw==",
@@ -278,15 +283,15 @@
       "jsr:@cliffy/ansi@1.0.0-rc.7",
       "jsr:@cliffy/command@1.0.0-rc.7",
       "jsr:@cliffy/table@1.0.0-rc.7",
-      "jsr:@std/cli@^1.0.13",
-      "jsr:@std/csv@^1.0.5",
-      "jsr:@std/encoding@^1.0.7",
-      "jsr:@std/fmt@^1.0.6",
-      "jsr:@std/fs@^1.0.13",
+      "jsr:@std/cli@^1.0.17",
+      "jsr:@std/csv@^1.0.6",
+      "jsr:@std/encoding@^1.0.10",
+      "jsr:@std/fmt@^1.0.8",
+      "jsr:@std/fs@^1.0.17",
       "jsr:@std/io@~0.225.2",
-      "jsr:@std/path@^1.0.8",
-      "jsr:@valibot/valibot@~0.42.1",
-      "npm:@lana-commerce/core@14.0.0-alpha.8",
+      "jsr:@std/path@^1.0.9",
+      "jsr:@valibot/valibot@^1.1.0",
+      "npm:@lana-commerce/core@14.0.0-alpha.13",
       "npm:fuzzysort@^3.1.0"
     ]
   }

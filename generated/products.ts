@@ -1,0 +1,395 @@
+
+import { Command, EnumType } from "@cliffy/command"
+import { getRequestContext, getConfigValue } from "../lib/config.ts"
+import { request } from "@lana-commerce/core/json/commerce"
+import { printValues, formatParser, streamValues, printValue } from "../lib/format.ts"
+import { updateAllCacheEntries } from "../lib/cache.ts"
+import { assembleInputData, printIDsMaybe } from "../lib/inputData.ts"
+import { waitForTaskWithProgressBar } from "../lib/task.ts"
+import { downloadFileToFile, uploadFileToFile } from "../lib/file.ts"
+
+const productsPageSortBy = new EnumType(["created_at", "updated_at"]);
+const publishedStatus = new EnumType(["any", "published", "unpublished"]);
+const searchProductsSortBy = new EnumType(["brand", "created_at", "max_inventory_count", "min_inventory_count", "min_price", "published_at", "rating", "sales", "sum_inventory_count", "title", "updated_at", "visits"]);
+const variantTypeFilter = new EnumType(["bundle", "digital_good", "gift_card", "physical", "service"]);
+
+let addExtraCommands = (cmd: Command) => cmd;
+try {
+  const m = await import("../extra/products.ts");
+  addExtraCommands = m.addExtraCommands;
+} catch {
+  // do nothing
+}
+
+const cmd = new Command()
+  .description("Manage Products.")
+  .action(() => {
+    cmd.showHelp();
+  })
+  .command("list", "List Products.\n\nhttps://docs.lana.dev/commerce/query/productsPage")
+  .type("productsPageSortBy", productsPageSortBy)
+  .type("publishedStatus", publishedStatus)
+  .option("--brand-id <string:string>", "Filter output by brand.")
+  .option("--category-id <string:string>", "Filter output by product category.")
+  .option("--created-at-max <datetime:string>", "Filter output by creation date, upper boundary.")
+  .option("--created-at-min <datetime:string>", "Filter output by creation date, lower boundary.")
+  .option("--last-key <string:string>", "Key of the last item from previous page.")
+  .option("--limit <number:number>", "Return up to N entries (pagination).")
+  .option("--offset <number:number>", "Skip N entries (pagination).")
+  .option("--published-at-max <datetime:string>", "Filter output by publication date, upper boundary.")
+  .option("--published-at-min <datetime:string>", "Filter output by publication date, lower boundary.")
+  .option("--sales-channel-id <string:string>", "Filter output by sales channel.")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--sort-by <enum:productsPageSortBy>", "Whether to sort output in some specific way.")
+  .option("--sort-desc", "Whether to use descending sort order.")
+  .option("--status <enum:publishedStatus>", "Filter output by published status.")
+  .option("--updated-at-max <datetime:string>", "Filter output by last update date, upper boundary.")
+  .option("--updated-at-min <datetime:string>", "Filter output by last update date, lower boundary.")
+  .option("--format <format>", "Format the output in a specific way.", {
+    default: "table",
+    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+  })
+  .option("--stream", "Stream paginated output instead of returning a single page.")
+  .action(async (opts) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "GET:products/page.json")
+    if (opts.stream) {
+      if (opts.brandId !== undefined) req = req.brand_id(opts.brandId)
+      if (opts.categoryId !== undefined) req = req.category_id(opts.categoryId)
+      if (opts.createdAtMax !== undefined) req = req.created_at_max(opts.createdAtMax)
+      if (opts.createdAtMin !== undefined) req = req.created_at_min(opts.createdAtMin)
+      if (opts.limit !== undefined) req = req.limit(opts.limit)
+      if (opts.publishedAtMax !== undefined) req = req.published_at_max(opts.publishedAtMax)
+      if (opts.publishedAtMin !== undefined) req = req.published_at_min(opts.publishedAtMin)
+      if (opts.salesChannelId !== undefined) req = req.sales_channel_id(opts.salesChannelId)
+      req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+      if (opts.sortBy !== undefined) req = req.sort_by(opts.sortBy)
+      if (opts.sortDesc) req = req.sort_desc(true)
+      if (opts.status !== undefined) req = req.status(opts.status)
+      if (opts.updatedAtMax !== undefined) req = req.updated_at_max(opts.updatedAtMax)
+      if (opts.updatedAtMin !== undefined) req = req.updated_at_min(opts.updatedAtMin)
+      await streamValues(req, opts.format, opts.sortBy);
+    } else {
+      if (opts.brandId !== undefined) req = req.brand_id(opts.brandId)
+      if (opts.categoryId !== undefined) req = req.category_id(opts.categoryId)
+      if (opts.createdAtMax !== undefined) req = req.created_at_max(opts.createdAtMax)
+      if (opts.createdAtMin !== undefined) req = req.created_at_min(opts.createdAtMin)
+      if (opts.lastKey !== undefined) req = req.last_key(opts.lastKey)
+      if (opts.limit !== undefined) req = req.limit(opts.limit)
+      if (opts.offset !== undefined) req = req.offset(opts.offset)
+      if (opts.publishedAtMax !== undefined) req = req.published_at_max(opts.publishedAtMax)
+      if (opts.publishedAtMin !== undefined) req = req.published_at_min(opts.publishedAtMin)
+      if (opts.salesChannelId !== undefined) req = req.sales_channel_id(opts.salesChannelId)
+      req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+      if (opts.sortBy !== undefined) req = req.sort_by(opts.sortBy)
+      if (opts.sortDesc) req = req.sort_desc(true)
+      if (opts.status !== undefined) req = req.status(opts.status)
+      if (opts.updatedAtMax !== undefined) req = req.updated_at_max(opts.updatedAtMax)
+      if (opts.updatedAtMin !== undefined) req = req.updated_at_min(opts.updatedAtMin)
+      const resp = await req.sendUnwrap();
+      printValues(resp.items, opts.format);
+    }
+  })
+
+  .command("get [...ids]", "Get one or multiple Products.\n\nhttps://docs.lana.dev/commerce/query/products")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--format <format>", "Format the output in a specific way.", {
+    default: "table",
+    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+  })
+  .action(async (opts, ...ids) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "GET:products.json")
+    req = req.ids(ids)
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    const resp = await req.sendUnwrap();
+    if (ids.length === 1) { printValue(resp[0], opts.format); } else { printValues(resp, opts.format); }
+  })
+
+  .command("delete <...ids>", "Delete one or multiple Products.\n\nhttps://docs.lana.dev/commerce/mutation/productsDelete")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .action(async (opts, ...ids) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "DELETE:products.json")
+    req = req.ids(ids)
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    await req.sendUnwrap();
+  })
+
+  .command("create", "Create one or multiple Products.\n\nhttps://docs.lana.dev/commerce/mutation/productsCreate")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--title <string>", "(required) The name of the product.")
+  .option("--ban-countries <json>", "List of countries, allowed or denied depending on ban mode.", { value: v => JSON.parse(v) })
+  .option("--ban-mode <enum>", "Ban mode for country-based banning.")
+  .option("--brand-id <string>", "A brand of the product.")
+  .option("--category-ids <json>", "A set of category resource links product belongs to.", { value: v => JSON.parse(v) })
+  .option("--custom-fields <json>", "", { value: v => JSON.parse(v) })
+  .option("--field-set-id <string>", "Field set for this product.")
+  .option("--google-product-category-code <number:number>", "Google Product Category numeric code.")
+  .option("--handle <string>", "A human-friendly unique string for the product automatically generated from its title.")
+  .option("--import-id <string>", "If product is created as a result of import process, this is import process owner ID.")
+  .option("--import-index <number:number>", "If product is created as a result of import process, this is import index (e.g. CSV line).")
+  .option("--maximum-quantity <number:number>", "Maximum amount of items customer can buy within one order.")
+  .option("--meta-description <string>", "Meta description for SEO purposes.")
+  .option("--meta-title <string>", "SEO-friendly title of the product.")
+  .option("--minimum-quantity <number:number>", "Minimum amount of items customer must order to buy a product.")
+  .option("--published <boolean:boolean>", "Whether server thinks product is published or not (depends on server time).")
+  .option("--published-at <datetime>", "The date and time when the product was published or null.")
+  .option("--raw-content <string>", "Raw content of the product.")
+  .option("--return-mode <enum>", "What to do if customer wants to return the product.")
+  .option("--review-dimension-set-id <string>", "Review dimension set for this product.")
+  .option("--sales-channel-ids <json>", "A set of sales channel resource links product should be included into.", { value: v => JSON.parse(v) })
+  .option("--subscription-only <boolean:boolean>", "Whether this product can only be used with a subscription or not.")
+  .option("--subscription-plans <json>", "Available subscription plans.", { value: v => JSON.parse(v) })
+  .option("--tags <json>", "Product tags (can be used for organization).", { value: v => JSON.parse(v) })
+  .option("--tiered-pricing-mode <enum>", "How to apply tiered pricing.")
+  .option("--data <data>", "Input JSON data file or \"-\" for stdin")
+  .action(async (opts) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "POST:products.json");
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    req = req.data(assembleInputData(opts, true, {
+      title: "title",
+      banCountries: "ban_countries",
+      banMode: "ban_mode",
+      brandId: "brand_id",
+      categoryIds: "category_ids",
+      customFields: "custom_fields",
+      fieldSetId: "field_set_id",
+      googleProductCategoryCode: "google_product_category_code",
+      handle: "handle",
+      importId: "import_id",
+      importIndex: "import_index",
+      maximumQuantity: "maximum_quantity",
+      metaDescription: "meta_description",
+      metaTitle: "meta_title",
+      minimumQuantity: "minimum_quantity",
+      published: "published",
+      publishedAt: "published_at",
+      rawContent: "raw_content",
+      returnMode: "return_mode",
+      reviewDimensionSetId: "review_dimension_set_id",
+      salesChannelIds: "sales_channel_ids",
+      subscriptionOnly: "subscription_only",
+      subscriptionPlans: "subscription_plans",
+      tags: "tags",
+      tieredPricingMode: "tiered_pricing_mode",
+    }));
+    printIDsMaybe(await req.sendUnwrap());
+  })
+
+  .command("modify <ids...>", "Modify one or multiple Products.\n\nhttps://docs.lana.dev/commerce/mutation/productsModify")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--ban-countries <json>", "List of countries, allowed or denied depending on ban mode.", { value: v => JSON.parse(v) })
+  .option("--ban-mode <enum>", "Ban mode for country-based banning.")
+  .option("--brand-id <string>", "A brand of the product.")
+  .option("--category-ids <json>", "A set of category resource links product belongs to.", { value: v => JSON.parse(v) })
+  .option("--custom-fields <json>", "", { value: v => JSON.parse(v) })
+  .option("--field-set-id <string>", "Field set for this product.")
+  .option("--google-product-category-code <number:number>", "Google Product Category numeric code.")
+  .option("--handle <string>", "A human-friendly unique string for the product automatically generated from its title.")
+  .option("--maximum-quantity <number:number>", "Maximum amount of items customer can buy within one order.")
+  .option("--meta-description <string>", "Meta description for SEO purposes.")
+  .option("--meta-title <string>", "SEO-friendly title of the product.")
+  .option("--minimum-quantity <number:number>", "Minimum amount of items customer must order to buy a product.")
+  .option("--published <boolean:boolean>", "Whether server thinks product is published or not (depends on server time).")
+  .option("--published-at <datetime>", "The date and time when the product was published or null.")
+  .option("--raw-content <string>", "Raw content of the product.")
+  .option("--return-mode <enum>", "What to do if customer wants to return the product.")
+  .option("--review-dimension-set-id <string>", "Review dimension set for this product.")
+  .option("--sales-channel-ids <json>", "A set of sales channel resource links product should be included into.", { value: v => JSON.parse(v) })
+  .option("--subscription-only <boolean:boolean>", "Whether this product can only be used with a subscription or not.")
+  .option("--subscription-plans <json>", "Available subscription plans.", { value: v => JSON.parse(v) })
+  .option("--tags <json>", "Product tags (can be used for organization).", { value: v => JSON.parse(v) })
+  .option("--tiered-pricing-mode <enum>", "How to apply tiered pricing.")
+  .option("--title <string>", "The name of the product.")
+  .option("--data <data>", "Input JSON data file or \"-\" for stdin")
+  .action(async (opts, ...ids) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "POST:products.json").ids(ids);
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    req = req.data(assembleInputData(opts, true, {
+      banCountries: "ban_countries",
+      banMode: "ban_mode",
+      brandId: "brand_id",
+      categoryIds: "category_ids",
+      customFields: "custom_fields",
+      fieldSetId: "field_set_id",
+      googleProductCategoryCode: "google_product_category_code",
+      handle: "handle",
+      maximumQuantity: "maximum_quantity",
+      metaDescription: "meta_description",
+      metaTitle: "meta_title",
+      minimumQuantity: "minimum_quantity",
+      published: "published",
+      publishedAt: "published_at",
+      rawContent: "raw_content",
+      returnMode: "return_mode",
+      reviewDimensionSetId: "review_dimension_set_id",
+      salesChannelIds: "sales_channel_ids",
+      subscriptionOnly: "subscription_only",
+      subscriptionPlans: "subscription_plans",
+      tags: "tags",
+      tieredPricingMode: "tiered_pricing_mode",
+      title: "title",
+    }));
+    await req.sendUnwrap();
+  })
+
+  .command("search", "Search Products.\n\nhttps://docs.lana.dev/commerce/query/searchProducts")
+  .type("searchProductsSortBy", searchProductsSortBy)
+  .option("--aggregations", "Whether to include aggregations into results or not.")
+  .option("--limit <number:number>", "Return up to N entries (pagination).")
+  .option("--offset <number:number>", "Skip N entries (pagination).")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--sort-by <enum:searchProductsSortBy>", "Whether to sort output in some specific way.")
+  .option("--sort-desc", "Whether to use descending sort order.")
+  .option("--op <enum>", "(required) Combining or comparison operator.")
+  .option("--boolean <boolean:boolean>", "Value of the option (if boolean).")
+  .option("--context <string>", "Override nesting level context (when automatic logic gives undesired results).")
+  .option("--name <string>", "Name of the option.")
+  .option("--nil <boolean:boolean>", "Value is nil.")
+  .option("--now <boolean:boolean>", "Value is now (rfc3339 time value, server's idea of now).")
+  .option("--number <number:number>", "Value of the option (if number).")
+  .option("--parent-index <number:number>", "Index of the parent option (usually \"and\", \"or\", \"not\"), -1 if no parent.")
+  .option("--text <string>", "Value of the option (if text).")
+  .option("--zero <boolean:boolean>", "Value is number zero.")
+  .option("--data <data>", "Input JSON data file or \"-\" for stdin")
+  .option("--format <format>", "Format the output in a specific way.", {
+    default: "table",
+    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+  })
+  .action(async (opts) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "POST:search/products.json");
+    req = req.expand({ items: true });
+    if (opts.aggregations) req = req.aggregations(true)
+    if (opts.limit !== undefined) req = req.limit(opts.limit)
+    if (opts.offset !== undefined) req = req.offset(opts.offset)
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    if (opts.sortBy !== undefined) req = req.sort_by(opts.sortBy)
+    if (opts.sortDesc) req = req.sort_desc(true)
+    req = req.data(assembleInputData(opts, true, {
+      op: "op",
+      boolean: "boolean",
+      context: "context",
+      name: "name",
+      nil: "nil",
+      now: "now",
+      number: "number",
+      parentIndex: "parent_index",
+      text: "text",
+      zero: "zero",
+    }));
+    const resp = await req.sendUnwrap();
+    printValues(resp.items, opts.format);
+  })
+
+  .command("suggest <...query>", "Suggest Products.\n\nhttps://docs.lana.dev/commerce/query/suggestProducts")
+  .type("variantTypeFilter", variantTypeFilter)
+  .option("--ignore-bundles", "Ignore bundle variant types.")
+  .option("--ignore-gift-cards", "Ignore gift card variant types.")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--type <enum:variantTypeFilter>", "Filter output by variant type.")
+  .option("--format <format>", "Format the output in a specific way.", {
+    default: "table",
+    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+  })
+  .action(async (opts, ...query) => {
+    const ctx = getRequestContext();
+    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    let req = request(ctx, "POST:suggest/products.json");
+    req = req.expand({ items: true });
+    if (opts.ignoreBundles) req = req.ignore_bundles(true)
+    if (opts.ignoreGiftCards) req = req.ignore_gift_cards(true)
+    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    if (opts.type !== undefined) req = req.type(opts.type)
+    req = req.data({ query: query.join(" ") });
+    const resp = await req.sendUnwrap();
+    printValues(resp.items, opts.format);
+  })
+
+  .command("export [output]", "Export Products.\n\nGet info on available CSV columns using this command: `info-csv-format get --name product`\n\nhttps://docs.lana.dev/commerce/mutation/productsExport")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--columns <string>", "Comma separated list of columns to include for export.", { value: (v) => v.split(",") })
+  .option("--ids <string>", "Comma separated list of ids to include for export.", { value: (v) => v.split(",") })
+  .option("--zip", "Compress the resulting file.")
+  .option("--date-and-time-format <string:string>", "Format to use for date and time formatting (uses Go library specification).")
+  .option("--date-format <string:string>", "Format to use for date formatting (uses Go library specification).")
+  .option("--timezone <string:string>", "Timezone to use with date and time formatting.")
+  .option("--length-unit <string:string>", "Length unit to use for formatting.")
+  .option("--weight-unit <string:string>", "Weight unit to use for formatting.")
+  .action(async (opts, output) => {
+    const shopID = opts.shopId || getConfigValue("shop_id");
+    const ctx = getRequestContext();
+    let req = request(ctx, "POST:products/export.json");
+    req = req.shop_id(shopID)
+    req = req.data({
+      columns: opts.columns,
+      ids: opts.ids,
+      zip: opts.zip,
+      options: {
+        date_and_time_format: opts.dateAndTimeFormat || "",
+        date_format: opts.dateFormat || "",
+        timezone: opts.timezone || "",
+        length_unit: (opts.lengthUnit || "mm") as any,
+        weight_unit: (opts.weightUnit || "g") as any,
+      },
+      })
+    const resp = await req.sendUnwrap();
+    const taskID = resp.task?.id;
+    if (!taskID) throw new Error("task id is missing in response");
+    const t = await waitForTaskWithProgressBar(ctx, shopID, taskID, "Exporting Products.");
+    const fileID = t?.result_file?.id;
+    if (!fileID) throw new Error("file id is missing in task result");
+    if (output) {
+      await downloadFileToFile(ctx, shopID, fileID, output);
+    } else {
+      console.log(`Export result is saved to file: ${fileID}`);
+    }
+  })
+
+  .command("import <input>", "Import Products.\n\nGet info on available CSV columns using this command: `info-csv-format get --name product`\n\nhttps://docs.lana.dev/commerce/mutation/productsImport")
+  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .option("--columns <string>", "Comma separated list of columns to include for import.", { value: (v) => v.split(","), required: true })
+  .option("--no-header", "Specify this option when CSV file has no header.")
+  .option("--date-and-time-format <string:string>", "Format to use for date and time formatting (uses Go library specification).")
+  .option("--date-format <string:string>", "Format to use for date formatting (uses Go library specification).")
+  .option("--timezone <string:string>", "Timezone to use with date and time formatting.")
+  .action(async (opts, input) => {
+    const shopID = opts.shopId || getConfigValue("shop_id");
+    const ctx = getRequestContext();
+    const fileID = await uploadFileToFile(ctx, shopID, input);
+    let req = request(ctx, "POST:products/import.json");
+    req = req.shop_id(shopID)
+    req = req.data({
+      file_id: fileID,
+      columns: opts.columns,
+      skip_header: opts.header,
+      options: {
+        date_and_time_format: opts.dateAndTimeFormat || "",
+        date_format: opts.dateFormat || "",
+        timezone: opts.timezone || "",
+      },
+      })
+    const resp = await req.sendUnwrap();
+    const taskID = resp.task?.id;
+    if (!taskID) throw new Error("task id is missing in response");
+    const t = await waitForTaskWithProgressBar(ctx, shopID, taskID, "Importing Products.");
+    if (t && t.errors.length > 0) {
+      console.log("Errors:");
+      for (const e of t.errors) {
+        console.log(e.message);
+      }
+    }
+  })
+
+  .reset();
+
+export default addExtraCommands(cmd);
