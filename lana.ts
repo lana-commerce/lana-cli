@@ -2,6 +2,12 @@
 
 import { Command } from "@cliffy/command";
 import { addSubCommands } from "./generated/_subcommands.ts";
+import { setColorEnabled } from "@std/fmt/colors";
+
+if (Deno.build.os === "windows") {
+  // force colors to be disabled on windows
+  setColorEnabled(false);
+}
 
 interface FirstArgSubCommand {
   name: string;
@@ -54,7 +60,7 @@ const fac = await getFirstArgumentCommand(Deno.args);
 
 const mainCommand = new Command()
   .name("lana")
-  .version("0.0.3")
+  .version("0.0.4")
   .description("Manage Lana Commerce API resources.")
   .action(() => {
     mainCommand.showHelp();
