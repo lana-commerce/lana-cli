@@ -54,7 +54,7 @@ const fac = await getFirstArgumentCommand(Deno.args);
 
 const mainCommand = new Command()
   .name("lana")
-  .version("0.1")
+  .version("0.0.3")
   .description("Manage Lana Commerce API resources.")
   .action(() => {
     mainCommand.showHelp();

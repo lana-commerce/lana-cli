@@ -8,15 +8,26 @@ on:
 jobs:
   release:
     runs-on: ubuntu-latest
-    permissions: write-all
+    permissions:
+      contents: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up Deno
         uses: denoland/setup-deno@v2
       - name: Compile
-        run: deno compile -A lana.ts && gzip -9 lana
+        run: |
+          set -e
+          deno compile -A lana.ts
+          tar --remove-files -cvzf lana-${{ github.ref_name }}-linux.x86_64.tar.gz
+          deno compile --target x86_64-pc-windows-msvc -A lana.ts
+          zip lana-${{ github.ref_name }}-windows.x86_64.zip -m lana.exe
+          deno compile --target x86_64-apple-darwin -A lana.ts
+          zip lana-${{ github.ref_name }}-darwin.x86_64.zip -m lana
       - name: Release
         uses: softprops/action-gh-release@v2
         with:
-          files: lana.gz
+          files: |
+            lana-${{ github.ref_name }}-linux.x86_64.tar.gz
+            lana-${{ github.ref_name }}-windows.x86_64.zip
+            lana-${{ github.ref_name }}-darwin.x86_64.zip
