@@ -1,0 +1,21 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Set up Deno
+        uses: denoland/setup-deno@v2
+      - name: Compile
+        run: deno compile -A lana.ts && gzip -9 lana
+      - name: Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: lana.gz
