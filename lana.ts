@@ -3,6 +3,7 @@
 import { Command } from "@cliffy/command";
 import { addSubCommands } from "./generated/_subcommands.ts";
 import { setColorEnabled } from "@std/fmt/colors";
+import { version } from "./lib/version.ts";
 
 if (Deno.build.os === "windows") {
   // force colors to be disabled on windows
@@ -20,6 +21,7 @@ interface SubCommand {
 }
 
 const subCommands: SubCommand[] = [
+  { name: "update", description: "Update the Lana Commerce CLI tool to latest version." },
   { name: "login", description: "Login to Lana API. Shortcut for `config login`. (interactive)" },
   { name: "config", description: "Configure Lana Commerce CLI tool." },
 ];
@@ -60,7 +62,7 @@ const fac = await getFirstArgumentCommand(Deno.args);
 
 const mainCommand = new Command()
   .name("lana")
-  .version("0.0.4")
+  .version(version)
   .description("Manage Lana Commerce API resources.")
   .action(() => {
     mainCommand.showHelp();

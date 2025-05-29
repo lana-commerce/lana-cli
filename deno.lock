@@ -19,8 +19,10 @@
     "jsr:@std/io@~0.225.2": "0.225.2",
     "jsr:@std/path@^1.0.9": "1.0.9",
     "jsr:@std/streams@^1.0.9": "1.0.9",
+    "jsr:@std/tar@~0.1.6": "0.1.6",
     "jsr:@std/text@~1.0.7": "1.0.9",
     "jsr:@valibot/valibot@^1.1.0": "1.1.0",
+    "jsr:@zip-js/zip-js@^2.7.62": "2.7.62",
     "npm:@lana-commerce/core@14.0.0-alpha.13": "14.0.0-alpha.13_preact@10.26.7_react@18.3.1_react-dom@18.3.1__react@18.3.1",
     "npm:@types/progress@2": "2.0.7",
     "npm:fuzzysort@^3.1.0": "3.1.0"
@@ -107,11 +109,20 @@
     "@std/streams@1.0.9": {
       "integrity": "a9d26b1988cdd7aa7b1f4b51e1c36c1557f3f252880fa6cc5b9f37078b1a5035"
     },
+    "@std/tar@0.1.6": {
+      "integrity": "7f06a5359518262207e1c28ea965fd552dff3ba2047d2e9225339af287b1f3a4",
+      "dependencies": [
+        "jsr:@std/streams"
+      ]
+    },
     "@std/text@1.0.9": {
       "integrity": "b2db4abc3e6ab93eb0280a0d5e126fd3fca80955bcc297ccaaf555e995eab747"
     },
     "@valibot/valibot@1.1.0": {
       "integrity": "2617f02b532011b8140926899d420a3e1bbb0fcb7cdf8e7b669df89e7edd7f5f"
+    },
+    "@zip-js/zip-js@2.7.62": {
+      "integrity": "11cbe0746fa1e52e6e0a601c89ba97365f16e38a07f139b9d9914f988aec9081"
     }
   },
   "npm": {
@@ -290,7 +301,9 @@
       "jsr:@std/fs@^1.0.17",
       "jsr:@std/io@~0.225.2",
       "jsr:@std/path@^1.0.9",
+      "jsr:@std/tar@~0.1.6",
       "jsr:@valibot/valibot@^1.1.0",
+      "jsr:@zip-js/zip-js@^2.7.62",
       "npm:@lana-commerce/core@14.0.0-alpha.13",
       "npm:fuzzysort@^3.1.0"
     ]

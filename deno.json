@@ -12,7 +12,9 @@
     "@std/fs": "jsr:@std/fs@^1.0.17",
     "@std/io": "jsr:@std/io@^0.225.2",
     "@std/path": "jsr:@std/path@^1.0.9",
+    "@std/tar": "jsr:@std/tar@^0.1.6",
     "@valibot/valibot": "jsr:@valibot/valibot@^1.1.0",
+    "@zip-js/zip-js": "jsr:@zip-js/zip-js@^2.7.62",
     "fuzzysort": "npm:fuzzysort@^3.1.0",
     "xdg_portable": "https://deno.land/x/xdg_portable@v10.6.0/src/mod.deno.ts"
   },
