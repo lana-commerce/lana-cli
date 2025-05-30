@@ -37,12 +37,6 @@ const entries = {
     defaultValue: "",
     ...jsonString,
   }),
-  "api_key": configEntry({
-    description:
-      "Defines the API key required for authenticating API calls. This is the preferred authentication method when using the CLI tool. When provided, this value takes precedence over the 'jwt' option.",
-    defaultValue: "",
-    ...jsonString,
-  }),
   "shop_id": configEntry({
     description:
       "Indicates the shop ID required for many API calls. If you consistently interact with a specific shop, configuring this value once will automatically apply it to relevant requests, streamlining your workflow.",
@@ -132,14 +126,12 @@ export function setConfigValue(name: string, value: string) {
     return;
   }
 
-  if (key === "api_key") {
+  if (key === "jwt") {
     try {
       const vals = value.split(".");
       const shopID = JSON.parse(new TextDecoder().decode(decodeBase64(vals[1]))).shop_id;
       if (shopID && typeof shopID === "string") {
-        console.log(`JWT is unset`);
         console.log(`Shop ID is set to: ${shopID}`);
-        entries.jwt.value = "";
         entries.shop_id.value = shopID;
       }
     } catch {
@@ -176,7 +168,7 @@ export function getRequestContext(): Context {
   const ctx: Context = {
     deviceID,
     host: `https://api.${getConfigValue("api")}`,
-    token: getConfigValue("api_key") || getConfigValue("jwt") || undefined,
+    token: getConfigValue("jwt") || undefined,
   };
   return ctx;
 }

@@ -106,7 +106,6 @@ const cmd = new Command()
     const payload = jwt.split(".")[1];
     const json = JSON.parse(new TextDecoder().decode(decodeBase64(payload)));
     setConfigValue("jwt", jwt);
-    setConfigValue("api_key", "");
     console.log(`Login successful! JWT is saved to the config file.`);
     console.log(`JWT read permission expires at: ${new Date(json.exp * 1000)}`);
     console.log(`JWT write permission expires at: ${new Date(json.wexp * 1000)}`);
