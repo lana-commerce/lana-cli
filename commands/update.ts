@@ -4,9 +4,6 @@ import { UntarStream } from "@std/tar/untar-stream";
 import { version } from "../lib/version.ts";
 import { ZipReader } from "@zip-js/zip-js";
 
-// TODO: remove this, it is temporary
-const DEBUG = true;
-
 function getLatestReleaseURL(v: string) {
   if (Deno.build.os === "linux") {
     return `https://github.com/lana-commerce/lana-cli/releases/download/${v}/lana-${v}-linux.x86_64.tar.gz`;
@@ -20,18 +17,7 @@ function getLatestReleaseURL(v: string) {
 }
 
 async function downloadLatestRelease(archivePath: string, url: string) {
-  let r: ReadableStream<Uint8Array<ArrayBufferLike>> | null;
-  if (DEBUG) {
-    // TODO: remove this, it is temporary
-    r = (await Deno.open(path.join(`/home/nsf/tmp/trunkery2/lana-cli`, path.basename(getLatestReleaseURL("0.0.4")))))
-      .readable;
-  } else {
-    r = (await fetch(url)).body;
-  }
-
-  if (r) {
-    await r.pipeTo((await Deno.create(archivePath)).writable);
-  }
+  await (await fetch(url)).body?.pipeTo((await Deno.create(archivePath)).writable);
 }
 
 async function unpackTheReleaseTo(archivePath: string, dstPath: string) {
@@ -60,8 +46,10 @@ async function unpackTheReleaseTo(archivePath: string, dstPath: string) {
 }
 
 async function getLatestVersion() {
-  // TODO: replace this, it is temporary
-  return "0.0.5";
+  const response = await fetch("https://api.github.com/repos/lana-commerce/lana-cli/releases/latest");
+  const json = await response.json();
+  const v = json.tag_name;
+  return v && typeof v === "string" ? v : version;
 }
 
 const cmd = new Command()
