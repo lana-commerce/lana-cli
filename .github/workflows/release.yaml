@@ -18,6 +18,7 @@ jobs:
       - name: Compile
         run: |
           set -e
+          deno checkversion.ts ${{ github.ref_name }}
           deno compile -A lana.ts
           tar --remove-files -cvzf lana-${{ github.ref_name }}-linux.x86_64.tar.gz lana
           deno compile --target x86_64-pc-windows-msvc -A lana.ts

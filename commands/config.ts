@@ -102,7 +102,22 @@ const cmd = new Command()
         userID: (v) => v.user_id,
       })
       .sendUnwrap();
-    const jwt = resp.token;
+    let jwt = "";
+    if (!resp.token && resp.two_factor_enabled) {
+      const twoFA = prompt("2FA Code:");
+      delete ctx.token;
+      delete ctx.userID;
+      const resp = await request(ctx, "POST:auth/login.json")
+        .data({ email, password, two_factor_code: twoFA })
+        .extract({
+          token: (v) => v.token,
+          userID: (v) => v.user_id,
+        })
+        .sendUnwrap();
+      jwt = resp.token;
+    } else {
+      jwt = resp.token;
+    }
     const payload = jwt.split(".")[1];
     const json = JSON.parse(new TextDecoder().decode(decodeBase64(payload)));
     setConfigValue("jwt", jwt);
