@@ -28,7 +28,7 @@ async function unpackTheReleaseTo(archivePath: string, dstPath: string) {
         .pipeThrough(new DecompressionStream("gzip"))
         .pipeThrough(new UntarStream())
     ) {
-      if (entry.path === "lana") {
+      if (entry.path === "lana" || entry.path === "lana.exe") {
         const dst = await Deno.open(dstPath, { write: true, create: true, truncate: true, mode: 0o755 });
         await entry.readable?.pipeTo(dst.writable);
       }
@@ -55,7 +55,8 @@ async function getLatestVersion() {
 const cmd = new Command()
   .action(async () => {
     const execPath = Deno.execPath();
-    if (path.basename(execPath) !== "lana") {
+    const execPathBaseName = path.basename(execPath);
+    if (!["lana", "lana.exe"].includes(execPathBaseName)) {
       throw new Error(`"lana update" only works on a compiled Lana Commerce CLI binary`);
     }
 

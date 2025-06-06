@@ -1,5 +1,6 @@
 import { Context, request } from "@lana-commerce/core/json/commerce";
-import { ProgressBar, ProgressBarStream } from "./progressBar.ts";
+import { ProgressBar } from "@std/cli/unstable-progress-bar";
+import { ProgressBarStream } from "@std/cli/unstable-progress-bar-stream";
 import { basename } from "@std/path";
 import { CommerceFileUploadAPI } from "@lana-commerce/core/json/commerceFileUpload";
 import { uploadFileGeneric } from "@lana-commerce/core/genericFile";
@@ -22,9 +23,10 @@ export async function downloadFileToFile(ctx: Context, shopID: string, fileID: s
     }
     const resp = await fetch(url);
     if (resp.body) {
-      const pb = new ProgressBarStream(Deno.stdout.writable, {
+      const pb = new ProgressBarStream({
+        writable: Deno.stdout.writable,
         max: Number(r1[0].size),
-        fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}${outputPath}`,
+        fmt: (x) => `[${x.styledTime}] [${x.progressBar}] [${x.styledData()}] ${outputPath}`,
       });
       const p1 = pb.readable.pipeTo(file.writable, { preventClose: true });
       const p2 = resp.body.pipeTo(pb.writable);
@@ -38,11 +40,11 @@ export async function downloadFileToFile(ctx: Context, shopID: string, fileID: s
 export async function uploadFileToFile(ctx: Context, shopID: string, inputPath: string) {
   const fileData = Deno.readFileSync(inputPath);
   const name = basename(inputPath);
-  const pb = new ProgressBar(Deno.stdout.writable, {
+  const pb = new ProgressBar({
+    writable: Deno.stdout.writable,
     max: fileData.byteLength,
-    fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}Uploading ${name}`,
+    fmt: (x) => `[${x.styledTime}] [${x.progressBar}] [${x.styledData()}] Uploading ${name}`,
   });
-  let lastUploadedBytes = 0;
   const result = await uploadFileGeneric({
     api: new CommerceFileUploadAPI(ctx),
     contentType: "application/octet-stream",
@@ -52,12 +54,10 @@ export async function uploadFileToFile(ctx: Context, shopID: string, inputPath: 
     storage: "private",
     size: fileData.byteLength,
     onProgress: (report) => {
-      const toAdd = report.uploadedBytes - lastUploadedBytes;
-      lastUploadedBytes = report.uploadedBytes;
-      pb.add(toAdd);
+      pb.value = report.uploadedBytes;
     },
   });
-  await pb.end();
+  await pb.stop();
   if (result.kind !== "ok") {
     throw new Error("file upload failed");
   }

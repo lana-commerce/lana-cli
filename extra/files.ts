@@ -4,7 +4,7 @@ import { uploadFileGeneric } from "@lana-commerce/core/genericFile";
 import { CommerceFileUploadAPI } from "@lana-commerce/core/json/commerceFileUpload";
 import { getConfigValue, getRequestContext } from "../lib/config.ts";
 import { basename } from "@std/path";
-import { ProgressBar } from "../lib/progressBar.ts";
+import { ProgressBar } from "@std/cli/unstable-progress-bar";
 
 export function addExtraCommands(cmd: Command): Command {
   return cmd
@@ -18,11 +18,11 @@ export function addExtraCommands(cmd: Command): Command {
         const fileData = Deno.readFileSync(file);
         const name = opts.name ?? basename(file);
         const ctx = getRequestContext();
-        const pb = new ProgressBar(Deno.stdout.writable, {
+        const pb = new ProgressBar({
+          writable: Deno.stdout.writable,
           max: fileData.byteLength,
-          fmt: (x) => `${x.styledTime()}${x.progressBar}${x.styledData()}Uploading ${name}`,
+          fmt: (x) => `[${x.styledTime}] [${x.progressBar}] [${x.styledData()}] Uploading ${name}`,
         });
-        let lastUploadedBytes = 0;
         await uploadFileGeneric({
           api: new CommerceFileUploadAPI(ctx),
           contentType: opts.contentType ?? "application/octet-stream",
@@ -32,12 +32,10 @@ export function addExtraCommands(cmd: Command): Command {
           storage: opts.public ? "general" : "private",
           size: fileData.byteLength,
           onProgress: (report) => {
-            const toAdd = report.uploadedBytes - lastUploadedBytes;
-            lastUploadedBytes = report.uploadedBytes;
-            pb.add(toAdd);
+            pb.value = report.uploadedBytes;
           },
         });
-        await pb.end();
+        await pb.stop();
       }
     })
     .command("download <file-id> [output]", "Download a file and save it.")

@@ -1,7 +1,7 @@
 import { assertExpanded, Context, request } from "@lana-commerce/core/json/commerce";
 import { ShardedTask } from "@lana-commerce/core/json/commerceTypes";
 import { sleep } from "@lana-commerce/core/sleep";
-import { ProgressBar } from "./progressBar.ts";
+import { ProgressBar } from "@std/cli/unstable-progress-bar";
 
 export type ProgressCallback = (percentage: number) => void;
 
@@ -36,16 +36,14 @@ export async function waitForTaskWithProgressBar(
   taskID: string,
   desc: string,
 ): Promise<ShardedTask | undefined> {
-  const pb = new ProgressBar(Deno.stdout.writable, {
+  const pb = new ProgressBar({
+    writable: Deno.stdout.writable,
     max: 100,
-    fmt: (x) => `${x.styledTime()}${x.progressBar}${desc}`,
+    fmt: (x) => `[${x.styledTime}] [${x.progressBar}] ${desc}`,
   });
-  let lastReported = 0;
   const result = await waitForTask(ctx, shopID, taskID, (percentage) => {
-    const toAdd = Math.floor(percentage) - lastReported;
-    lastReported = toAdd;
-    pb.add(toAdd);
+    pb.value = Math.floor(percentage);
   });
-  await pb.end();
+  await pb.stop();
   return result;
 }
