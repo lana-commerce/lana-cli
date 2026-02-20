@@ -23,17 +23,17 @@ const cmd = new Command()
 
 
 
-  .command("create", "Create one or multiple Plans.\n\nhttps://docs.lana.dev/commerce/mutation/planCreate")
-  .option("--shop-id <string:string>", "Unique shop identifier.")
+  .command("create", "Create one or multiple Plans.\n\nhttps://docs.lana.dev/commerce/mutation/organizationsPlanCreate")
+  .option("--organization-id <string:string>", "Unique organization identifier.")
   .option("--plan-id <string>", "(required) Unique plan identifier.")
   .option("--payment-method-id <string>", "Unique payment method identifier.")
   .option("--token <string>", "Stripe payment method token.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
     const ctx = getRequestContext();
-    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
-    let req = request(ctx, "POST:plan.json");
-    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
+    await updateAllCacheEntries(ctx, "");
+    let req = request(ctx, "POST:organizations/plan.json");
+    req = req.organization_id(opts.organizationId || getConfigValue("organization_id"))
     req = req.data(assembleInputData(opts, false, {
       planId: "plan_id",
       paymentMethodId: "payment_method_id",

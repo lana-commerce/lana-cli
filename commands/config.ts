@@ -129,11 +129,22 @@ const cmd = new Command()
       request(ctx, "GET:users.json").ids([ctx.userID]).sendUnwrap(),
     ]);
     if (r2.length > 0 && r2[0].default_shop_id) {
-      console.log(`Shop ID is set to: ${r2[0].default_shop_id} (default user shop)`);
-      setConfigValue("shop_id", r2[0].default_shop_id);
-    } else if (r1.items.length === 1) {
-      console.log(`Shop ID is set to: ${r1.items[0].id} (the only shop)`);
-      setConfigValue("shop_id", r1.items[0].id);
+      const id = r2[0].default_shop_id;
+      console.log(`Shop ID is set to: ${id} (default user shop)`);
+      setConfigValue("shop_id", id);
+      const shop = r1.items.find((s) => s.id === id);
+      if (shop && shop.organization?.id) {
+        console.log(`Organization ID is set to: ${shop.organization.id}`);
+        setConfigValue("organization_id", shop.organization.id);
+      }
+    } else if (r1.items.length > 0) {
+      const shop = r1.items[0];
+      console.log(`Shop ID is set to: ${shop.id} (first shop)`);
+      setConfigValue("shop_id", shop.id);
+      if (shop.organization?.id) {
+        console.log(`Organization ID is set to: ${shop.organization.id}`);
+        setConfigValue("organization_id", shop.organization.id);
+      }
     }
   })
   .reset();

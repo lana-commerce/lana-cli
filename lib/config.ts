@@ -43,6 +43,12 @@ const entries = {
     defaultValue: "",
     ...jsonString,
   }),
+  "organization_id": configEntry({
+    description:
+      "Indicates the organization ID required for some API calls. If you consistently interact with a specific organization, configuring this value once will automatically apply it to relevant requests, streamlining your workflow.",
+    defaultValue: "",
+    ...jsonString,
+  }),
   "api": configEntry({
     description:
       "Specifies the domain used to define API endpoints. This setting is primarily intended for internal access to test environments. For most users, the default value is recommended and should suffice unless a specific requirement necessitates a change.",

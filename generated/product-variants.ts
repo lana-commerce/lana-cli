@@ -102,7 +102,6 @@ const cmd = new Command()
   .option("--country-of-origin <string>", "Country of origin (ISO 3166-1 alpha-2).")
   .option("--currency-prices <json>", "List of prices specific to currencies.", { value: v => JSON.parse(v) })
   .option("--custom-fields <json>", "", { value: v => JSON.parse(v) })
-  .option("--customer-group-prices <json>", "List of prices specific to customer groups.", { value: v => JSON.parse(v) })
   .option("--discountable <boolean:boolean>", "Whether discount can be applied to this variant or not.")
   .option("--expiration-days <number:number>", "Amount of days the product is available for download after purchase (digital product), 0 if not limited.")
   .option("--fulfillment-service <enum>", "Service who is doing the fulfillment.")
@@ -119,16 +118,13 @@ const cmd = new Command()
   .option("--options <json>", "List of options.", { value: v => JSON.parse(v) })
   .option("--position <number:number>", "The order of the product variant in the list of product variants.")
   .option("--price <number:number>", "The price of the product variant.")
+  .option("--pricing-overrides <json>", "", { value: v => JSON.parse(v) })
   .option("--product-id <string>", "A unique product identifier.")
   .option("--retail-price <number:number>", "The retail cost of the product variant.")
-  .option("--sale-price <number:number>", "Special price for a product that can be active during a selected period of time.")
-  .option("--sale-price-from <datetime>", "Lower date boundary when sale price is active.")
-  .option("--sale-price-to <datetime>", "Upper date boundary when sale price is active.")
   .option("--suppliers <json>", "List of suppliers for this variant.", { value: v => JSON.parse(v) })
   .option("--tax-class <string>", "Tax class of this variant.")
   .option("--taxable <boolean:boolean>", "Specifies whether or not a tax is charged when the product variant is sold.")
   .option("--tiered-pricing <json>", "", { value: v => JSON.parse(v) })
-  .option("--type <enum>", "Type of the variant.")
   .option("--width <number:number>", "Width of the product (in millimeters) used which can be used when calculating shipping costs.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
@@ -145,7 +141,6 @@ const cmd = new Command()
       countryOfOrigin: "country_of_origin",
       currencyPrices: "currency_prices",
       customFields: "custom_fields",
-      customerGroupPrices: "customer_group_prices",
       discountable: "discountable",
       expirationDays: "expiration_days",
       fulfillmentService: "fulfillment_service",
@@ -162,16 +157,13 @@ const cmd = new Command()
       options: "options",
       position: "position",
       price: "price",
+      pricingOverrides: "pricing_overrides",
       productId: "product_id",
       retailPrice: "retail_price",
-      salePrice: "sale_price",
-      salePriceFrom: "sale_price_from",
-      salePriceTo: "sale_price_to",
       suppliers: "suppliers",
       taxClass: "tax_class",
       taxable: "taxable",
       tieredPricing: "tiered_pricing",
-      type: "type",
       width: "width",
     }));
     printIDsMaybe(await req.sendUnwrap());
@@ -187,7 +179,6 @@ const cmd = new Command()
   .option("--country-of-origin <string>", "Country of origin (ISO 3166-1 alpha-2).")
   .option("--currency-prices <json>", "List of prices specific to currencies.", { value: v => JSON.parse(v) })
   .option("--custom-fields <json>", "", { value: v => JSON.parse(v) })
-  .option("--customer-group-prices <json>", "List of prices specific to customer groups.", { value: v => JSON.parse(v) })
   .option("--discountable <boolean:boolean>", "Whether discount can be applied to this variant or not.")
   .option("--expiration-days <number:number>", "Amount of days the product is available for download after purchase (digital product), 0 if not limited.")
   .option("--fulfillment-service <enum>", "Service who is doing the fulfillment.")
@@ -204,16 +195,13 @@ const cmd = new Command()
   .option("--options <json>", "List of options.", { value: v => JSON.parse(v) })
   .option("--position <number:number>", "The order of the product variant in the list of product variants.")
   .option("--price <number:number>", "The price of the product variant.")
+  .option("--pricing-overrides <json>", "", { value: v => JSON.parse(v) })
   .option("--retail-price <number:number>", "The retail cost of the product variant.")
-  .option("--sale-price <number:number>", "Special price for a product that can be active during a selected period of time.")
-  .option("--sale-price-from <datetime>", "Lower date boundary when sale price is active.")
-  .option("--sale-price-to <datetime>", "Upper date boundary when sale price is active.")
   .option("--sku <string>", "A unique identifier for the product variant in the shop (stock keeping unit).")
   .option("--suppliers <json>", "List of suppliers for this variant.", { value: v => JSON.parse(v) })
   .option("--tax-class <string>", "Tax class of this variant.")
   .option("--taxable <boolean:boolean>", "Specifies whether or not a tax is charged when the product variant is sold.")
   .option("--tiered-pricing <json>", "", { value: v => JSON.parse(v) })
-  .option("--type <enum>", "Type of the variant.")
   .option("--width <number:number>", "Width of the product (in millimeters) used which can be used when calculating shipping costs.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts, ...ids) => {
@@ -230,7 +218,6 @@ const cmd = new Command()
       countryOfOrigin: "country_of_origin",
       currencyPrices: "currency_prices",
       customFields: "custom_fields",
-      customerGroupPrices: "customer_group_prices",
       discountable: "discountable",
       expirationDays: "expiration_days",
       fulfillmentService: "fulfillment_service",
@@ -247,16 +234,13 @@ const cmd = new Command()
       options: "options",
       position: "position",
       price: "price",
+      pricingOverrides: "pricing_overrides",
       retailPrice: "retail_price",
-      salePrice: "sale_price",
-      salePriceFrom: "sale_price_from",
-      salePriceTo: "sale_price_to",
       sku: "sku",
       suppliers: "suppliers",
       taxClass: "tax_class",
       taxable: "taxable",
       tieredPricing: "tiered_pricing",
-      type: "type",
       width: "width",
     }));
     await req.sendUnwrap();

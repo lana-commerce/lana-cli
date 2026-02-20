@@ -47,7 +47,7 @@ const cmd = new Command()
   .option("--updated-at-min <datetime:string>", "Filter output by last update date, lower boundary.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+    value: formatParser("{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
   })
   .option("--stream", "Stream paginated output instead of returning a single page.")
   .action(async (opts) => {
@@ -96,7 +96,7 @@ const cmd = new Command()
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+    value: formatParser("{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
   })
   .action(async (opts, ...ids) => {
     const ctx = getRequestContext();
@@ -146,6 +146,7 @@ const cmd = new Command()
   .option("--subscription-plans <json>", "Available subscription plans.", { value: v => JSON.parse(v) })
   .option("--tags <json>", "Product tags (can be used for organization).", { value: v => JSON.parse(v) })
   .option("--tiered-pricing-mode <enum>", "How to apply tiered pricing.")
+  .option("--type <enum>", "Type of the product.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
     const ctx = getRequestContext();
@@ -178,6 +179,7 @@ const cmd = new Command()
       subscriptionPlans: "subscription_plans",
       tags: "tags",
       tieredPricingMode: "tiered_pricing_mode",
+      type: "type",
     }));
     printIDsMaybe(await req.sendUnwrap());
   })
@@ -207,6 +209,7 @@ const cmd = new Command()
   .option("--tags <json>", "Product tags (can be used for organization).", { value: v => JSON.parse(v) })
   .option("--tiered-pricing-mode <enum>", "How to apply tiered pricing.")
   .option("--title <string>", "The name of the product.")
+  .option("--type <enum>", "Type of the product.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts, ...ids) => {
     const ctx = getRequestContext();
@@ -237,6 +240,7 @@ const cmd = new Command()
       tags: "tags",
       tieredPricingMode: "tiered_pricing_mode",
       title: "title",
+      type: "type",
     }));
     await req.sendUnwrap();
   })
@@ -262,7 +266,7 @@ const cmd = new Command()
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+    value: formatParser("{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
   })
   .action(async (opts) => {
     const ctx = getRequestContext();
@@ -299,7 +303,7 @@ const cmd = new Command()
   .option("--type <enum:variantTypeFilter>", "Filter output by variant type.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
+    value: formatParser("{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created:v=>new Date(v.created_at).toLocaleString(),published:v=>v.published_at ? new Date(v.published_at).toLocaleString() : ''}", "{id:v=>v.id,type:v=>v.type,title:v=>v.title,handle:v=>v.handle,created_at:v=>v.created_at,published_at:v=>v.published_at}"),
   })
   .action(async (opts, ...query) => {
     const ctx = getRequestContext();

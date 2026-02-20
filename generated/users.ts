@@ -22,6 +22,7 @@ const cmd = new Command()
     cmd.showHelp();
   })
   .command("list", "List Users.\n\nhttps://docs.lana.dev/commerce/query/users")
+  .option("--organization-id <string:string>", "Unique organization identifier.")
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
@@ -31,12 +32,14 @@ const cmd = new Command()
     const ctx = getRequestContext();
     await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
     let req = request(ctx, "GET:users.json")
+    req = req.organization_id(opts.organizationId || getConfigValue("organization_id"))
     req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     const resp = await req.sendUnwrap();
     printValues(resp, opts.format);
   })
 
   .command("get [...ids]", "Get one or multiple Users.\n\nhttps://docs.lana.dev/commerce/query/users")
+  .option("--organization-id <string:string>", "Unique organization identifier.")
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
@@ -47,24 +50,14 @@ const cmd = new Command()
     await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
     let req = request(ctx, "GET:users.json")
     req = req.ids(ids)
+    req = req.organization_id(opts.organizationId || getConfigValue("organization_id"))
     req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     const resp = await req.sendUnwrap();
     if (ids.length === 1) { printValue(resp[0], opts.format); } else { printValues(resp, opts.format); }
   })
 
-  .command("delete <...ids>", "Delete one or multiple Users.\n\nhttps://docs.lana.dev/commerce/mutation/usersDelete")
-  .option("--shop-id <string:string>", "Unique shop identifier.")
-  .action(async (opts, ...ids) => {
-    const ctx = getRequestContext();
-    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
-    let req = request(ctx, "DELETE:users.json")
-    req = req.ids(ids)
-    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
-    await req.sendUnwrap();
-  })
 
   .command("create", "Create one or multiple Users.\n\nhttps://docs.lana.dev/commerce/mutation/usersCreate")
-  .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--tos-agree <boolean:boolean>", "(required) It has to be set to true and signifies that you agree with Lana TOS.")
   .option("--bio-raw-content <string>", "Raw content with user's bio.")
   .option("--display-name <string>", "Display name of the user (customers will see it).")
@@ -83,9 +76,8 @@ const cmd = new Command()
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
     const ctx = getRequestContext();
-    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    await updateAllCacheEntries(ctx, "");
     let req = request(ctx, "POST:users.json");
-    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     req = req.data(assembleInputData(opts, true, {
       tosAgree: "tos_agree",
       bioRawContent: "bio_raw_content",
@@ -107,27 +99,22 @@ const cmd = new Command()
   })
 
   .command("modify <ids...>", "Modify one or multiple Users.\n\nhttps://docs.lana.dev/commerce/mutation/usersModify")
-  .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--bio-raw-content <string>", "Raw content with user's bio.")
   .option("--default-shop-id <string>", "Default shop identifier.")
   .option("--display-name <string>", "Display name of the user (customers will see it).")
   .option("--emails <json>", "", { value: v => JSON.parse(v) })
   .option("--language <string>", "Preferred language of the user.")
   .option("--name <string>", "Name of the user.")
-  .option("--permissions <json>", "A set of permission bits in context of a given shop.", { value: v => JSON.parse(v) })
   .option("--prefer-twenty-four-hour <enum>", "Whether to use 24h time format.")
   .option("--profile-image <enum>", "Which profile image should be used.")
   .option("--profile-image-color <number:number>", "Preferred color for auto profile image.")
-  .option("--role-ids <json>", "A set of roles in context of a given shop.", { value: v => JSON.parse(v) })
-  .option("--suspended <boolean:boolean>", "Whether user is suspended for a given shop or not.")
   .option("--timezone <string>", "Name of the time zone the user is in.")
   .option("--tos-agree <boolean:boolean>", "It has to be set to true and signifies that you agree with updated Lana TOS.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts, ...ids) => {
     const ctx = getRequestContext();
-    await updateAllCacheEntries(ctx, opts.shopId || getConfigValue("shop_id"));
+    await updateAllCacheEntries(ctx, "");
     let req = request(ctx, "POST:users.json").ids(ids);
-    req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     req = req.data(assembleInputData(opts, true, {
       bioRawContent: "bio_raw_content",
       defaultShopId: "default_shop_id",
@@ -135,12 +122,9 @@ const cmd = new Command()
       emails: "emails",
       language: "language",
       name: "name",
-      permissions: "permissions",
       preferTwentyFourHour: "prefer_twenty_four_hour",
       profileImage: "profile_image",
       profileImageColor: "profile_image_color",
-      roleIds: "role_ids",
-      suspended: "suspended",
       timezone: "timezone",
       tosAgree: "tos_agree",
     }));

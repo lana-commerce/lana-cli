@@ -25,6 +25,7 @@ const cmd = new Command()
   .option("--last-key <string:string>", "Key of the last item from previous page.")
   .option("--limit <number:number>", "Return up to N entries (pagination).")
   .option("--offset <number:number>", "Skip N entries (pagination).")
+  .option("--organization-id <string:string>", "Unique organization identifier.")
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
     value: formatParser("{id:v=>v.id,name:v=>v.name,test:v=>v.test?'Yes':'No'}", "{id:v=>v.id,name:v=>v.name,test:v=>v.test}"),
@@ -36,11 +37,13 @@ const cmd = new Command()
     let req = request(ctx, "GET:shops/page.json")
     if (opts.stream) {
       if (opts.limit !== undefined) req = req.limit(opts.limit)
+      req = req.organization_id(opts.organizationId || getConfigValue("organization_id"))
       await streamValues(req, opts.format, "ignore");
     } else {
       if (opts.lastKey !== undefined) req = req.last_key(opts.lastKey)
       if (opts.limit !== undefined) req = req.limit(opts.limit)
       if (opts.offset !== undefined) req = req.offset(opts.offset)
+      req = req.organization_id(opts.organizationId || getConfigValue("organization_id"))
       const resp = await req.sendUnwrap();
       printValues(resp.items, opts.format);
     }
@@ -68,9 +71,10 @@ const cmd = new Command()
   .option("--shop-address <json>", "(required) Address of the shop.", { value: v => JSON.parse(v) })
   .option("--app-domain <string>", "Shop's lana.sh sub-domain, must be unique.")
   .option("--currency <string>", "Currency code.")
+  .option("--entity-id <string>", "Entity to add shop to.")
   .option("--language <string>", "")
   .option("--notification-email <string>", "Email for shop notifications.")
-  .option("--plan-id <string>", "Unique identifier for the subscription plan a customer is on.")
+  .option("--plan-id <string>", "Unique identifier for the subscription plan a shop is on.")
   .option("--test <boolean:boolean>", "Whether shop is in test mode or not.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
@@ -83,6 +87,7 @@ const cmd = new Command()
       shopAddress: "shop_address",
       appDomain: "app_domain",
       currency: "currency",
+      entityId: "entity_id",
       language: "language",
       notificationEmail: "notification_email",
       planId: "plan_id",
@@ -94,6 +99,7 @@ const cmd = new Command()
   .command("modify", "Modify Shop.\n\nhttps://docs.lana.dev/commerce/mutation/shopsModify")
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--app-domain <string>", "Shop's lana.sh sub-domain, must be unique.")
+  .option("--entity-id <string>", "Entity this shop belongs to.")
   .option("--primary-domain-id <string>", "Unique domain identifier.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
@@ -103,6 +109,7 @@ const cmd = new Command()
     req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     req = req.data(assembleInputData(opts, true, {
       appDomain: "app_domain",
+      entityId: "entity_id",
       primaryDomainId: "primary_domain_id",
     }));
     await req.sendUnwrap();

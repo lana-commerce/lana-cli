@@ -26,7 +26,7 @@ const cmd = new Command()
   .option("--transfer-id <string:string>", "Unique transfer identifier.", { required: true })
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,user:v=>v.user_id||'',text:v=>v.text,created:v=>new Date(v.created_at).toLocaleString()}", "{id:v=>v.id,user_id:v=>v.user_id,text:v=>v.text,created_at:v=>v.created_at}"),
+    value: formatParser("{id:v=>v.id,user:v=>v.user_id||'',created:v=>new Date(v.created_at).toLocaleString()}", "{id:v=>v.id,user_id:v=>v.user_id,created_at:v=>v.created_at}"),
   })
   .action(async (opts) => {
     const ctx = getRequestContext();
@@ -43,7 +43,7 @@ const cmd = new Command()
   .option("--transfer-id <string:string>", "Unique transfer identifier.", { required: true })
   .option("--format <format>", "Format the output in a specific way.", {
     default: "table",
-    value: formatParser("{id:v=>v.id,user:v=>v.user_id||'',text:v=>v.text,created:v=>new Date(v.created_at).toLocaleString()}", "{id:v=>v.id,user_id:v=>v.user_id,text:v=>v.text,created_at:v=>v.created_at}"),
+    value: formatParser("{id:v=>v.id,user:v=>v.user_id||'',created:v=>new Date(v.created_at).toLocaleString()}", "{id:v=>v.id,user_id:v=>v.user_id,created_at:v=>v.created_at}"),
   })
   .action(async (opts, ...ids) => {
     const ctx = getRequestContext();
@@ -72,7 +72,7 @@ const cmd = new Command()
   .command("create", "Create one or multiple Transfer Notes.\n\nhttps://docs.lana.dev/commerce/mutation/transferNotesCreate")
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--transfer-id <string:string>", "Unique transfer identifier.", { required: true })
-  .option("--text <string>", "(required) Note text.")
+  .option("--raw-content <string>", "(required) Raw content of the note.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts) => {
     const ctx = getRequestContext();
@@ -81,7 +81,7 @@ const cmd = new Command()
     req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     if (opts.transferId !== undefined) req = req.transfer_id(opts.transferId)
     req = req.data(assembleInputData(opts, true, {
-      text: "text",
+      rawContent: "raw_content",
     }));
     printIDsMaybe(await req.sendUnwrap());
   })
@@ -89,7 +89,7 @@ const cmd = new Command()
   .command("modify <ids...>", "Modify one or multiple Transfer Notes.\n\nhttps://docs.lana.dev/commerce/mutation/transferNotesModify")
   .option("--shop-id <string:string>", "Unique shop identifier.")
   .option("--transfer-id <string:string>", "Unique transfer identifier.", { required: true })
-  .option("--text <string>", "Note text.")
+  .option("--raw-content <string>", "Raw content of the note.")
   .option("--data <data>", "Input JSON data file or \"-\" for stdin")
   .action(async (opts, ...ids) => {
     const ctx = getRequestContext();
@@ -98,7 +98,7 @@ const cmd = new Command()
     req = req.shop_id(opts.shopId || getConfigValue("shop_id"))
     if (opts.transferId !== undefined) req = req.transfer_id(opts.transferId)
     req = req.data(assembleInputData(opts, true, {
-      text: "text",
+      rawContent: "raw_content",
     }));
     await req.sendUnwrap();
   })

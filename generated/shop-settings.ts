@@ -54,7 +54,6 @@ const cmd = new Command()
   .option("--customer-oauth-providers <json>", "OAuth2 providers for customer auth.", { value: v => JSON.parse(v) })
   .option("--customer-service-email <string>", "This address is mentioned in emails sent to customers.")
   .option("--customer-webauthn <boolean:boolean>", "Whether customers can signup/signin using webauthn.")
-  .option("--default-payment-method-id <string>", "Unique payment method identifier.")
   .option("--default-tax-rule-id <string>", "Unique tax rule identifier.")
   .option("--gift-card-enabled <boolean:boolean>", "Whether gift cards are enabled or not (not available on Micro).")
   .option("--gift-card-expiration-seconds <number:number>", "If not null, created gift cards will expire after given amount of seconds.")
@@ -113,7 +112,6 @@ const cmd = new Command()
       customerOauthProviders: "customer_oauth_providers",
       customerServiceEmail: "customer_service_email",
       customerWebauthn: "customer_webauthn",
-      defaultPaymentMethodId: "default_payment_method_id",
       defaultTaxRuleId: "default_tax_rule_id",
       giftCardEnabled: "gift_card_enabled",
       giftCardExpirationSeconds: "gift_card_expiration_seconds",
